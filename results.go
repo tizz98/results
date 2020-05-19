@@ -13,4 +13,6 @@
 //go:generate go run github.com/tizz98/results/cmd -pkg results -t bool -tup-default false
 //go:generate go run github.com/tizz98/results/cmd -pkg results -t string -tup-default emptyString
 //go:generate go run github.com/tizz98/results/cmd -pkg results -t []byte -tup-default nil -result-name ByteSliceResult
+//go:generate go run github.com/tizz98/results/cmd -pkg results -t time.Time -tup-default time.Time{} -result-name TimeResult
+//go:generate go run github.com/tizz98/results/cmd -pkg results -t *time.Time -tup-default nil -result-name TimePtrResult
 package results

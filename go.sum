@@ -1,2 +1,4 @@
 github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334 h1:VHgatEHNcBFEB7inlalqfNqw65aNkM1lGX2yt3NmbS8=
 github.com/iancoleman/strcase v0.0.0-20191112232945-16388991a334/go.mod h1:SK73tn/9oHe+/Y0h39VT4UCxmurVJkR5NA7kMEAOgSE=
+github.com/joncalhoun/pipe v0.0.0-20170510025636-72505674a733 h1:/wtaMDeVpoAUkqZl/GT3lvM9nDBmRApu/Uvl7EUc9Ao=
+github.com/joncalhoun/pipe v0.0.0-20170510025636-72505674a733/go.mod h1:2MNFZhLx2HMHTN4xKH6FhpoQWqmD8Ato8QOE2hp5hY4=

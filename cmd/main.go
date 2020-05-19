@@ -3,9 +3,13 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
+	"log"
 	"os"
+	"os/exec"
 
 	"github.com/iancoleman/strcase"
+	"github.com/joncalhoun/pipe"
 
 	"github.com/tizz98/results"
 )
@@ -55,7 +59,32 @@ func main() {
 		panic(err)
 	}
 
-	if err := results.GenerateResult(f, input); err != nil {
+	p, err := pipe.New(
+		exec.Command("gofmt"),
+		exec.Command("goimports"),
+	)
+	if err != nil {
+		log.Fatalf("unable to create pipe: %s", err.Error())
+	}
+
+	r, w := io.Pipe()
+	p.Stdin = r
+	p.Stdout = f
+
+	if err := p.Start(); err != nil {
+		log.Fatalf("unable to start pipe: %s", err.Error())
+	}
+
+	if err := results.GenerateResult(w, input); err != nil {
 		panic(err)
 	}
+
+	if err := w.Close(); err != nil {
+		log.Fatalf("unable to close pipe writer: %s", err.Error())
+	}
+
+	if err := p.Wait(); err != nil {
+		log.Fatalf("error waitng for pipe to finish: %s", err.Error())
+	}
+
 }

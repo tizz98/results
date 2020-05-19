@@ -66,6 +66,17 @@ func (r {{.ResultName}}) Tup() ({{.T}}, error) {
     return r.UnwrapOr({{.TupDefault}}), r.err
 }
 
+// Set is a shortcut to checking the value of an error before setting the result.
+// If there is an error, {{.ResultName}}.Err(err) will be called, otherwise {{.ResultName}}.Ok(v) will be called.
+func (r *{{.ResultName}}) Set(v {{.T}}, err error) {
+	if err != nil {
+		r.Err(err)
+		return
+	}
+
+	r.Ok(v)
+}
+
 func (r {{.ResultName}}) checkAbilityToSet() {
     if r.isSet() {
         panic("{{.ResultName}} is already set, cannot set again")
