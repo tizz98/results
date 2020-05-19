@@ -4,6 +4,35 @@ Similar `Result` structs like in Rust or other languages.
 
 See [`example_test.go`](example_test.go) for usage.
 
+## Example
+
+```go
+package main
+
+import (
+    "fmt"
+    "strconv"
+
+    "github.com/tizz98/results"
+)
+
+func betterParser(v string) (result results.IntResult) {
+    val, err := strconv.Atoi(v)
+    if err != nil {
+        result.Err(err)
+        return
+    }
+
+    result.Ok(val)
+    return
+}
+
+func main() {
+    result := betterParser("123").Unwrap()
+    fmt.Printf("Got: %d\n", result)
+}
+```
+
 ## Struct example
 
 ```go
