@@ -6,14 +6,17 @@ type UintResult struct {
     err error
 }
 
+// IsOk returns true when the result contains a non-nil result with no error
 func (r *UintResult) IsOk() bool {
     return r.err == nil
 }
 
+// IsErr returns true when the result contains a non-nil error
 func (r *UintResult) IsErr() bool {
     return r.err != nil
 }
 
+// Unwrap panics if the result contains an error, otherwise it returns the value
 func (r *UintResult) Unwrap() uint {
     if r.IsErr() {
         panic("cannot unwrap UintResult, it is an error")
@@ -21,6 +24,7 @@ func (r *UintResult) Unwrap() uint {
     return *r.value
 }
 
+// UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
 func (r *UintResult) UnwrapOr(v uint) uint {
     if r.IsOk() {
         return r.Unwrap()
@@ -28,6 +32,7 @@ func (r *UintResult) UnwrapOr(v uint) uint {
     return v
 }
 
+// UnwrapOrElse returns the value if there is not an error, otherwise the function is called and the result is returned
 func (r *UintResult) UnwrapOrElse(fn func(err error) uint) uint {
     if r.IsOk() {
         return r.Unwrap()
@@ -35,20 +40,26 @@ func (r *UintResult) UnwrapOrElse(fn func(err error) uint) uint {
     return fn(r.err)
 }
 
+// Ok sets the result to a successful result with the provided value.
+// This will panic if the result has already been set to successful or an error.
 func (r *UintResult) Ok(v uint) {
     r.checkAbilityToSet()
     r.value = &v
 }
 
+// Err sets the result to an error result with the provided error.
+// This will panic if the result has already been set to successful or an error.
 func (r *UintResult) Err(err error) {
     r.checkAbilityToSet()
     r.err = err
 }
 
+// GetError returns the error of the result. It may be nil, so check with UintResult.IsErr() first.
 func (r *UintResult) GetErr() error {
     return r.err
 }
 
+// Tup returns a tuple of (uint, error) with 0 being returned for uint if there is an error
 func (r *UintResult) Tup() (uint, error) {
     return r.UnwrapOr(0), r.err
 }

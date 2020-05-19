@@ -6,14 +6,17 @@ type BoolResult struct {
     err error
 }
 
+// IsOk returns true when the result contains a non-nil result with no error
 func (r *BoolResult) IsOk() bool {
     return r.err == nil
 }
 
+// IsErr returns true when the result contains a non-nil error
 func (r *BoolResult) IsErr() bool {
     return r.err != nil
 }
 
+// Unwrap panics if the result contains an error, otherwise it returns the value
 func (r *BoolResult) Unwrap() bool {
     if r.IsErr() {
         panic("cannot unwrap BoolResult, it is an error")
@@ -21,6 +24,7 @@ func (r *BoolResult) Unwrap() bool {
     return *r.value
 }
 
+// UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
 func (r *BoolResult) UnwrapOr(v bool) bool {
     if r.IsOk() {
         return r.Unwrap()
@@ -28,6 +32,7 @@ func (r *BoolResult) UnwrapOr(v bool) bool {
     return v
 }
 
+// UnwrapOrElse returns the value if there is not an error, otherwise the function is called and the result is returned
 func (r *BoolResult) UnwrapOrElse(fn func(err error) bool) bool {
     if r.IsOk() {
         return r.Unwrap()
@@ -35,20 +40,26 @@ func (r *BoolResult) UnwrapOrElse(fn func(err error) bool) bool {
     return fn(r.err)
 }
 
+// Ok sets the result to a successful result with the provided value.
+// This will panic if the result has already been set to successful or an error.
 func (r *BoolResult) Ok(v bool) {
     r.checkAbilityToSet()
     r.value = &v
 }
 
+// Err sets the result to an error result with the provided error.
+// This will panic if the result has already been set to successful or an error.
 func (r *BoolResult) Err(err error) {
     r.checkAbilityToSet()
     r.err = err
 }
 
+// GetError returns the error of the result. It may be nil, so check with BoolResult.IsErr() first.
 func (r *BoolResult) GetErr() error {
     return r.err
 }
 
+// Tup returns a tuple of (bool, error) with false being returned for bool if there is an error
 func (r *BoolResult) Tup() (bool, error) {
     return r.UnwrapOr(false), r.err
 }
