@@ -7,7 +7,7 @@ import (
 )
 
 var (
-	t = template.Must(template.ParseFiles("gen.gotpl"))
+	tmpl = template.Must(template.New("").Parse(templateText))
 )
 
 type Input struct {
@@ -33,5 +33,5 @@ func (i *Input) ReplacePlaceholders() {
 
 func GenerateResult(w io.Writer, in Input) error {
 	in.ReplacePlaceholders()
-	return t.Execute(w, in)
+	return tmpl.Execute(w, in)
 }
