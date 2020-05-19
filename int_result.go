@@ -7,17 +7,17 @@ type IntResult struct {
 }
 
 // IsOk returns true when the result contains a non-nil result with no error
-func (r *IntResult) IsOk() bool {
+func (r IntResult) IsOk() bool {
     return r.err == nil
 }
 
 // IsErr returns true when the result contains a non-nil error
-func (r *IntResult) IsErr() bool {
+func (r IntResult) IsErr() bool {
     return r.err != nil
 }
 
 // Unwrap panics if the result contains an error, otherwise it returns the value
-func (r *IntResult) Unwrap() int {
+func (r IntResult) Unwrap() int {
     if r.IsErr() {
         panic("cannot unwrap IntResult, it is an error")
     }
@@ -25,7 +25,7 @@ func (r *IntResult) Unwrap() int {
 }
 
 // UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
-func (r *IntResult) UnwrapOr(v int) int {
+func (r IntResult) UnwrapOr(v int) int {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -33,7 +33,7 @@ func (r *IntResult) UnwrapOr(v int) int {
 }
 
 // UnwrapOrElse returns the value if there is not an error, otherwise the function is called and the result is returned
-func (r *IntResult) UnwrapOrElse(fn func(err error) int) int {
+func (r IntResult) UnwrapOrElse(fn func(err error) int) int {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -55,21 +55,21 @@ func (r *IntResult) Err(err error) {
 }
 
 // GetError returns the error of the result. It may be nil, so check with IntResult.IsErr() first.
-func (r *IntResult) GetErr() error {
+func (r IntResult) GetErr() error {
     return r.err
 }
 
 // Tup returns a tuple of (int, error) with 0 being returned for int if there is an error
-func (r *IntResult) Tup() (int, error) {
+func (r IntResult) Tup() (int, error) {
     return r.UnwrapOr(0), r.err
 }
 
-func (r *IntResult) checkAbilityToSet() {
+func (r IntResult) checkAbilityToSet() {
     if r.isSet() {
         panic("IntResult is already set, cannot set again")
     }
 }
 
-func (r *IntResult) isSet() bool {
+func (r IntResult) isSet() bool {
     return r.value != nil || r.err != nil
 }

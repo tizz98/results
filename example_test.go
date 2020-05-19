@@ -1,6 +1,9 @@
 package results
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 func ExampleIntResult_Ok() {
 	var result IntResult
@@ -28,4 +31,21 @@ func ExampleIntResult_IsOk_WithInt() {
 	result.Ok(123)
 	fmt.Printf("%v\n", result.IsOk())
 	// Output: true
+}
+
+func Example() {
+	var foo = func(input string) (result IntResult) {
+		val, err := strconv.Atoi(input)
+		if err != nil {
+			result.Err(err)
+			return
+		}
+
+		result.Ok(val)
+		return
+	}
+
+	result := foo("123").Unwrap()
+	fmt.Printf("%d\n", result)
+	// Output: 123
 }

@@ -7,17 +7,17 @@ type StringResult struct {
 }
 
 // IsOk returns true when the result contains a non-nil result with no error
-func (r *StringResult) IsOk() bool {
+func (r StringResult) IsOk() bool {
     return r.err == nil
 }
 
 // IsErr returns true when the result contains a non-nil error
-func (r *StringResult) IsErr() bool {
+func (r StringResult) IsErr() bool {
     return r.err != nil
 }
 
 // Unwrap panics if the result contains an error, otherwise it returns the value
-func (r *StringResult) Unwrap() string {
+func (r StringResult) Unwrap() string {
     if r.IsErr() {
         panic("cannot unwrap StringResult, it is an error")
     }
@@ -25,7 +25,7 @@ func (r *StringResult) Unwrap() string {
 }
 
 // UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
-func (r *StringResult) UnwrapOr(v string) string {
+func (r StringResult) UnwrapOr(v string) string {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -33,7 +33,7 @@ func (r *StringResult) UnwrapOr(v string) string {
 }
 
 // UnwrapOrElse returns the value if there is not an error, otherwise the function is called and the result is returned
-func (r *StringResult) UnwrapOrElse(fn func(err error) string) string {
+func (r StringResult) UnwrapOrElse(fn func(err error) string) string {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -55,21 +55,21 @@ func (r *StringResult) Err(err error) {
 }
 
 // GetError returns the error of the result. It may be nil, so check with StringResult.IsErr() first.
-func (r *StringResult) GetErr() error {
+func (r StringResult) GetErr() error {
     return r.err
 }
 
 // Tup returns a tuple of (string, error) with "" being returned for string if there is an error
-func (r *StringResult) Tup() (string, error) {
+func (r StringResult) Tup() (string, error) {
     return r.UnwrapOr(""), r.err
 }
 
-func (r *StringResult) checkAbilityToSet() {
+func (r StringResult) checkAbilityToSet() {
     if r.isSet() {
         panic("StringResult is already set, cannot set again")
     }
 }
 
-func (r *StringResult) isSet() bool {
+func (r StringResult) isSet() bool {
     return r.value != nil || r.err != nil
 }

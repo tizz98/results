@@ -7,17 +7,17 @@ type Float64Result struct {
 }
 
 // IsOk returns true when the result contains a non-nil result with no error
-func (r *Float64Result) IsOk() bool {
+func (r Float64Result) IsOk() bool {
     return r.err == nil
 }
 
 // IsErr returns true when the result contains a non-nil error
-func (r *Float64Result) IsErr() bool {
+func (r Float64Result) IsErr() bool {
     return r.err != nil
 }
 
 // Unwrap panics if the result contains an error, otherwise it returns the value
-func (r *Float64Result) Unwrap() float64 {
+func (r Float64Result) Unwrap() float64 {
     if r.IsErr() {
         panic("cannot unwrap Float64Result, it is an error")
     }
@@ -25,7 +25,7 @@ func (r *Float64Result) Unwrap() float64 {
 }
 
 // UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
-func (r *Float64Result) UnwrapOr(v float64) float64 {
+func (r Float64Result) UnwrapOr(v float64) float64 {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -33,7 +33,7 @@ func (r *Float64Result) UnwrapOr(v float64) float64 {
 }
 
 // UnwrapOrElse returns the value if there is not an error, otherwise the function is called and the result is returned
-func (r *Float64Result) UnwrapOrElse(fn func(err error) float64) float64 {
+func (r Float64Result) UnwrapOrElse(fn func(err error) float64) float64 {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -55,21 +55,21 @@ func (r *Float64Result) Err(err error) {
 }
 
 // GetError returns the error of the result. It may be nil, so check with Float64Result.IsErr() first.
-func (r *Float64Result) GetErr() error {
+func (r Float64Result) GetErr() error {
     return r.err
 }
 
 // Tup returns a tuple of (float64, error) with 0 being returned for float64 if there is an error
-func (r *Float64Result) Tup() (float64, error) {
+func (r Float64Result) Tup() (float64, error) {
     return r.UnwrapOr(0), r.err
 }
 
-func (r *Float64Result) checkAbilityToSet() {
+func (r Float64Result) checkAbilityToSet() {
     if r.isSet() {
         panic("Float64Result is already set, cannot set again")
     }
 }
 
-func (r *Float64Result) isSet() bool {
+func (r Float64Result) isSet() bool {
     return r.value != nil || r.err != nil
 }

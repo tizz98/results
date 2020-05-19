@@ -7,17 +7,17 @@ type Uint8Result struct {
 }
 
 // IsOk returns true when the result contains a non-nil result with no error
-func (r *Uint8Result) IsOk() bool {
+func (r Uint8Result) IsOk() bool {
     return r.err == nil
 }
 
 // IsErr returns true when the result contains a non-nil error
-func (r *Uint8Result) IsErr() bool {
+func (r Uint8Result) IsErr() bool {
     return r.err != nil
 }
 
 // Unwrap panics if the result contains an error, otherwise it returns the value
-func (r *Uint8Result) Unwrap() uint8 {
+func (r Uint8Result) Unwrap() uint8 {
     if r.IsErr() {
         panic("cannot unwrap Uint8Result, it is an error")
     }
@@ -25,7 +25,7 @@ func (r *Uint8Result) Unwrap() uint8 {
 }
 
 // UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
-func (r *Uint8Result) UnwrapOr(v uint8) uint8 {
+func (r Uint8Result) UnwrapOr(v uint8) uint8 {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -33,7 +33,7 @@ func (r *Uint8Result) UnwrapOr(v uint8) uint8 {
 }
 
 // UnwrapOrElse returns the value if there is not an error, otherwise the function is called and the result is returned
-func (r *Uint8Result) UnwrapOrElse(fn func(err error) uint8) uint8 {
+func (r Uint8Result) UnwrapOrElse(fn func(err error) uint8) uint8 {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -55,21 +55,21 @@ func (r *Uint8Result) Err(err error) {
 }
 
 // GetError returns the error of the result. It may be nil, so check with Uint8Result.IsErr() first.
-func (r *Uint8Result) GetErr() error {
+func (r Uint8Result) GetErr() error {
     return r.err
 }
 
 // Tup returns a tuple of (uint8, error) with 0 being returned for uint8 if there is an error
-func (r *Uint8Result) Tup() (uint8, error) {
+func (r Uint8Result) Tup() (uint8, error) {
     return r.UnwrapOr(0), r.err
 }
 
-func (r *Uint8Result) checkAbilityToSet() {
+func (r Uint8Result) checkAbilityToSet() {
     if r.isSet() {
         panic("Uint8Result is already set, cannot set again")
     }
 }
 
-func (r *Uint8Result) isSet() bool {
+func (r Uint8Result) isSet() bool {
     return r.value != nil || r.err != nil
 }

@@ -7,17 +7,17 @@ type UintResult struct {
 }
 
 // IsOk returns true when the result contains a non-nil result with no error
-func (r *UintResult) IsOk() bool {
+func (r UintResult) IsOk() bool {
     return r.err == nil
 }
 
 // IsErr returns true when the result contains a non-nil error
-func (r *UintResult) IsErr() bool {
+func (r UintResult) IsErr() bool {
     return r.err != nil
 }
 
 // Unwrap panics if the result contains an error, otherwise it returns the value
-func (r *UintResult) Unwrap() uint {
+func (r UintResult) Unwrap() uint {
     if r.IsErr() {
         panic("cannot unwrap UintResult, it is an error")
     }
@@ -25,7 +25,7 @@ func (r *UintResult) Unwrap() uint {
 }
 
 // UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
-func (r *UintResult) UnwrapOr(v uint) uint {
+func (r UintResult) UnwrapOr(v uint) uint {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -33,7 +33,7 @@ func (r *UintResult) UnwrapOr(v uint) uint {
 }
 
 // UnwrapOrElse returns the value if there is not an error, otherwise the function is called and the result is returned
-func (r *UintResult) UnwrapOrElse(fn func(err error) uint) uint {
+func (r UintResult) UnwrapOrElse(fn func(err error) uint) uint {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -55,21 +55,21 @@ func (r *UintResult) Err(err error) {
 }
 
 // GetError returns the error of the result. It may be nil, so check with UintResult.IsErr() first.
-func (r *UintResult) GetErr() error {
+func (r UintResult) GetErr() error {
     return r.err
 }
 
 // Tup returns a tuple of (uint, error) with 0 being returned for uint if there is an error
-func (r *UintResult) Tup() (uint, error) {
+func (r UintResult) Tup() (uint, error) {
     return r.UnwrapOr(0), r.err
 }
 
-func (r *UintResult) checkAbilityToSet() {
+func (r UintResult) checkAbilityToSet() {
     if r.isSet() {
         panic("UintResult is already set, cannot set again")
     }
 }
 
-func (r *UintResult) isSet() bool {
+func (r UintResult) isSet() bool {
     return r.value != nil || r.err != nil
 }

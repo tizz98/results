@@ -7,17 +7,17 @@ type Int16Result struct {
 }
 
 // IsOk returns true when the result contains a non-nil result with no error
-func (r *Int16Result) IsOk() bool {
+func (r Int16Result) IsOk() bool {
     return r.err == nil
 }
 
 // IsErr returns true when the result contains a non-nil error
-func (r *Int16Result) IsErr() bool {
+func (r Int16Result) IsErr() bool {
     return r.err != nil
 }
 
 // Unwrap panics if the result contains an error, otherwise it returns the value
-func (r *Int16Result) Unwrap() int16 {
+func (r Int16Result) Unwrap() int16 {
     if r.IsErr() {
         panic("cannot unwrap Int16Result, it is an error")
     }
@@ -25,7 +25,7 @@ func (r *Int16Result) Unwrap() int16 {
 }
 
 // UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
-func (r *Int16Result) UnwrapOr(v int16) int16 {
+func (r Int16Result) UnwrapOr(v int16) int16 {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -33,7 +33,7 @@ func (r *Int16Result) UnwrapOr(v int16) int16 {
 }
 
 // UnwrapOrElse returns the value if there is not an error, otherwise the function is called and the result is returned
-func (r *Int16Result) UnwrapOrElse(fn func(err error) int16) int16 {
+func (r Int16Result) UnwrapOrElse(fn func(err error) int16) int16 {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -55,21 +55,21 @@ func (r *Int16Result) Err(err error) {
 }
 
 // GetError returns the error of the result. It may be nil, so check with Int16Result.IsErr() first.
-func (r *Int16Result) GetErr() error {
+func (r Int16Result) GetErr() error {
     return r.err
 }
 
 // Tup returns a tuple of (int16, error) with 0 being returned for int16 if there is an error
-func (r *Int16Result) Tup() (int16, error) {
+func (r Int16Result) Tup() (int16, error) {
     return r.UnwrapOr(0), r.err
 }
 
-func (r *Int16Result) checkAbilityToSet() {
+func (r Int16Result) checkAbilityToSet() {
     if r.isSet() {
         panic("Int16Result is already set, cannot set again")
     }
 }
 
-func (r *Int16Result) isSet() bool {
+func (r Int16Result) isSet() bool {
     return r.value != nil || r.err != nil
 }

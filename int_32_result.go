@@ -7,17 +7,17 @@ type Int32Result struct {
 }
 
 // IsOk returns true when the result contains a non-nil result with no error
-func (r *Int32Result) IsOk() bool {
+func (r Int32Result) IsOk() bool {
     return r.err == nil
 }
 
 // IsErr returns true when the result contains a non-nil error
-func (r *Int32Result) IsErr() bool {
+func (r Int32Result) IsErr() bool {
     return r.err != nil
 }
 
 // Unwrap panics if the result contains an error, otherwise it returns the value
-func (r *Int32Result) Unwrap() int32 {
+func (r Int32Result) Unwrap() int32 {
     if r.IsErr() {
         panic("cannot unwrap Int32Result, it is an error")
     }
@@ -25,7 +25,7 @@ func (r *Int32Result) Unwrap() int32 {
 }
 
 // UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
-func (r *Int32Result) UnwrapOr(v int32) int32 {
+func (r Int32Result) UnwrapOr(v int32) int32 {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -33,7 +33,7 @@ func (r *Int32Result) UnwrapOr(v int32) int32 {
 }
 
 // UnwrapOrElse returns the value if there is not an error, otherwise the function is called and the result is returned
-func (r *Int32Result) UnwrapOrElse(fn func(err error) int32) int32 {
+func (r Int32Result) UnwrapOrElse(fn func(err error) int32) int32 {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -55,21 +55,21 @@ func (r *Int32Result) Err(err error) {
 }
 
 // GetError returns the error of the result. It may be nil, so check with Int32Result.IsErr() first.
-func (r *Int32Result) GetErr() error {
+func (r Int32Result) GetErr() error {
     return r.err
 }
 
 // Tup returns a tuple of (int32, error) with 0 being returned for int32 if there is an error
-func (r *Int32Result) Tup() (int32, error) {
+func (r Int32Result) Tup() (int32, error) {
     return r.UnwrapOr(0), r.err
 }
 
-func (r *Int32Result) checkAbilityToSet() {
+func (r Int32Result) checkAbilityToSet() {
     if r.isSet() {
         panic("Int32Result is already set, cannot set again")
     }
 }
 
-func (r *Int32Result) isSet() bool {
+func (r Int32Result) isSet() bool {
     return r.value != nil || r.err != nil
 }

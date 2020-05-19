@@ -9,17 +9,17 @@ type {{.ResultName}} struct {
 }
 
 // IsOk returns true when the result contains a non-nil result with no error
-func (r *{{.ResultName}}) IsOk() bool {
+func (r {{.ResultName}}) IsOk() bool {
     return r.err == nil
 }
 
 // IsErr returns true when the result contains a non-nil error
-func (r *{{.ResultName}}) IsErr() bool {
+func (r {{.ResultName}}) IsErr() bool {
     return r.err != nil
 }
 
 // Unwrap panics if the result contains an error, otherwise it returns the value
-func (r *{{.ResultName}}) Unwrap() {{.T}} {
+func (r {{.ResultName}}) Unwrap() {{.T}} {
     if r.IsErr() {
         panic("cannot unwrap {{.ResultName}}, it is an error")
     }
@@ -27,7 +27,7 @@ func (r *{{.ResultName}}) Unwrap() {{.T}} {
 }
 
 // UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
-func (r *{{.ResultName}}) UnwrapOr(v {{.T}}) {{.T}} {
+func (r {{.ResultName}}) UnwrapOr(v {{.T}}) {{.T}} {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -35,7 +35,7 @@ func (r *{{.ResultName}}) UnwrapOr(v {{.T}}) {{.T}} {
 }
 
 // UnwrapOrElse returns the value if there is not an error, otherwise the function is called and the result is returned
-func (r *{{.ResultName}}) UnwrapOrElse(fn func(err error) {{.T}}) {{.T}} {
+func (r {{.ResultName}}) UnwrapOrElse(fn func(err error) {{.T}}) {{.T}} {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -57,22 +57,22 @@ func (r *{{.ResultName}}) Err(err error) {
 }
 
 // GetError returns the error of the result. It may be nil, so check with {{.ResultName}}.IsErr() first.
-func (r *{{.ResultName}}) GetErr() error {
+func (r {{.ResultName}}) GetErr() error {
     return r.err
 }
 
 // Tup returns a tuple of ({{.T}}, error) with {{.TupDefault}} being returned for {{.T}} if there is an error
-func (r *{{.ResultName}}) Tup() ({{.T}}, error) {
+func (r {{.ResultName}}) Tup() ({{.T}}, error) {
     return r.UnwrapOr({{.TupDefault}}), r.err
 }
 
-func (r *{{.ResultName}}) checkAbilityToSet() {
+func (r {{.ResultName}}) checkAbilityToSet() {
     if r.isSet() {
         panic("{{.ResultName}} is already set, cannot set again")
     }
 }
 
-func (r *{{.ResultName}}) isSet() bool {
+func (r {{.ResultName}}) isSet() bool {
     return r.{{.FieldName}} != nil || r.err != nil
 }
 `

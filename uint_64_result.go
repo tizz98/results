@@ -7,17 +7,17 @@ type Uint64Result struct {
 }
 
 // IsOk returns true when the result contains a non-nil result with no error
-func (r *Uint64Result) IsOk() bool {
+func (r Uint64Result) IsOk() bool {
     return r.err == nil
 }
 
 // IsErr returns true when the result contains a non-nil error
-func (r *Uint64Result) IsErr() bool {
+func (r Uint64Result) IsErr() bool {
     return r.err != nil
 }
 
 // Unwrap panics if the result contains an error, otherwise it returns the value
-func (r *Uint64Result) Unwrap() uint64 {
+func (r Uint64Result) Unwrap() uint64 {
     if r.IsErr() {
         panic("cannot unwrap Uint64Result, it is an error")
     }
@@ -25,7 +25,7 @@ func (r *Uint64Result) Unwrap() uint64 {
 }
 
 // UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
-func (r *Uint64Result) UnwrapOr(v uint64) uint64 {
+func (r Uint64Result) UnwrapOr(v uint64) uint64 {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -33,7 +33,7 @@ func (r *Uint64Result) UnwrapOr(v uint64) uint64 {
 }
 
 // UnwrapOrElse returns the value if there is not an error, otherwise the function is called and the result is returned
-func (r *Uint64Result) UnwrapOrElse(fn func(err error) uint64) uint64 {
+func (r Uint64Result) UnwrapOrElse(fn func(err error) uint64) uint64 {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -55,21 +55,21 @@ func (r *Uint64Result) Err(err error) {
 }
 
 // GetError returns the error of the result. It may be nil, so check with Uint64Result.IsErr() first.
-func (r *Uint64Result) GetErr() error {
+func (r Uint64Result) GetErr() error {
     return r.err
 }
 
 // Tup returns a tuple of (uint64, error) with 0 being returned for uint64 if there is an error
-func (r *Uint64Result) Tup() (uint64, error) {
+func (r Uint64Result) Tup() (uint64, error) {
     return r.UnwrapOr(0), r.err
 }
 
-func (r *Uint64Result) checkAbilityToSet() {
+func (r Uint64Result) checkAbilityToSet() {
     if r.isSet() {
         panic("Uint64Result is already set, cannot set again")
     }
 }
 
-func (r *Uint64Result) isSet() bool {
+func (r Uint64Result) isSet() bool {
     return r.value != nil || r.err != nil
 }

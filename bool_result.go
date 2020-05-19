@@ -7,17 +7,17 @@ type BoolResult struct {
 }
 
 // IsOk returns true when the result contains a non-nil result with no error
-func (r *BoolResult) IsOk() bool {
+func (r BoolResult) IsOk() bool {
     return r.err == nil
 }
 
 // IsErr returns true when the result contains a non-nil error
-func (r *BoolResult) IsErr() bool {
+func (r BoolResult) IsErr() bool {
     return r.err != nil
 }
 
 // Unwrap panics if the result contains an error, otherwise it returns the value
-func (r *BoolResult) Unwrap() bool {
+func (r BoolResult) Unwrap() bool {
     if r.IsErr() {
         panic("cannot unwrap BoolResult, it is an error")
     }
@@ -25,7 +25,7 @@ func (r *BoolResult) Unwrap() bool {
 }
 
 // UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
-func (r *BoolResult) UnwrapOr(v bool) bool {
+func (r BoolResult) UnwrapOr(v bool) bool {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -33,7 +33,7 @@ func (r *BoolResult) UnwrapOr(v bool) bool {
 }
 
 // UnwrapOrElse returns the value if there is not an error, otherwise the function is called and the result is returned
-func (r *BoolResult) UnwrapOrElse(fn func(err error) bool) bool {
+func (r BoolResult) UnwrapOrElse(fn func(err error) bool) bool {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -55,21 +55,21 @@ func (r *BoolResult) Err(err error) {
 }
 
 // GetError returns the error of the result. It may be nil, so check with BoolResult.IsErr() first.
-func (r *BoolResult) GetErr() error {
+func (r BoolResult) GetErr() error {
     return r.err
 }
 
 // Tup returns a tuple of (bool, error) with false being returned for bool if there is an error
-func (r *BoolResult) Tup() (bool, error) {
+func (r BoolResult) Tup() (bool, error) {
     return r.UnwrapOr(false), r.err
 }
 
-func (r *BoolResult) checkAbilityToSet() {
+func (r BoolResult) checkAbilityToSet() {
     if r.isSet() {
         panic("BoolResult is already set, cannot set again")
     }
 }
 
-func (r *BoolResult) isSet() bool {
+func (r BoolResult) isSet() bool {
     return r.value != nil || r.err != nil
 }

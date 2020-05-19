@@ -7,17 +7,17 @@ type ByteSliceResult struct {
 }
 
 // IsOk returns true when the result contains a non-nil result with no error
-func (r *ByteSliceResult) IsOk() bool {
+func (r ByteSliceResult) IsOk() bool {
     return r.err == nil
 }
 
 // IsErr returns true when the result contains a non-nil error
-func (r *ByteSliceResult) IsErr() bool {
+func (r ByteSliceResult) IsErr() bool {
     return r.err != nil
 }
 
 // Unwrap panics if the result contains an error, otherwise it returns the value
-func (r *ByteSliceResult) Unwrap() []byte {
+func (r ByteSliceResult) Unwrap() []byte {
     if r.IsErr() {
         panic("cannot unwrap ByteSliceResult, it is an error")
     }
@@ -25,7 +25,7 @@ func (r *ByteSliceResult) Unwrap() []byte {
 }
 
 // UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
-func (r *ByteSliceResult) UnwrapOr(v []byte) []byte {
+func (r ByteSliceResult) UnwrapOr(v []byte) []byte {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -33,7 +33,7 @@ func (r *ByteSliceResult) UnwrapOr(v []byte) []byte {
 }
 
 // UnwrapOrElse returns the value if there is not an error, otherwise the function is called and the result is returned
-func (r *ByteSliceResult) UnwrapOrElse(fn func(err error) []byte) []byte {
+func (r ByteSliceResult) UnwrapOrElse(fn func(err error) []byte) []byte {
     if r.IsOk() {
         return r.Unwrap()
     }
@@ -55,21 +55,21 @@ func (r *ByteSliceResult) Err(err error) {
 }
 
 // GetError returns the error of the result. It may be nil, so check with ByteSliceResult.IsErr() first.
-func (r *ByteSliceResult) GetErr() error {
+func (r ByteSliceResult) GetErr() error {
     return r.err
 }
 
 // Tup returns a tuple of ([]byte, error) with nil being returned for []byte if there is an error
-func (r *ByteSliceResult) Tup() ([]byte, error) {
+func (r ByteSliceResult) Tup() ([]byte, error) {
     return r.UnwrapOr(nil), r.err
 }
 
-func (r *ByteSliceResult) checkAbilityToSet() {
+func (r ByteSliceResult) checkAbilityToSet() {
     if r.isSet() {
         panic("ByteSliceResult is already set, cannot set again")
     }
 }
 
-func (r *ByteSliceResult) isSet() bool {
+func (r ByteSliceResult) isSet() bool {
     return r.value != nil || r.err != nil
 }
