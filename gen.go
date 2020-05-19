@@ -2,6 +2,7 @@ package results
 
 import (
 	"io"
+	"strings"
 	"text/template"
 )
 
@@ -26,6 +27,11 @@ func (i Input) Valid() bool {
 
 }
 
+func (i *Input) ReplacePlaceholders() {
+	i.TupDefault = strings.ReplaceAll(i.TupDefault, "emptyString", `""`)
+}
+
 func GenerateResult(w io.Writer, in Input) error {
+	in.ReplacePlaceholders()
 	return t.Execute(w, in)
 }

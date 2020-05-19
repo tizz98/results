@@ -37,7 +37,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	fileName := fmt.Sprintf("%s_result.go", strcase.ToSnake(input.T))
+	fileName := fmt.Sprintf("%s.go", strcase.ToSnake(input.ResultName))
 
 	_, err := os.Stat(fileName)
 	if err != nil {
