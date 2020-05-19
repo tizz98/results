@@ -49,3 +49,10 @@ func Example() {
 	fmt.Printf("%d\n", result)
 	// Output: 123
 }
+
+func ExampleIntResult_Set() {
+	var result IntResult
+	result.Set(strconv.Atoi("456"))
+	fmt.Printf("%d\n", result.Unwrap())
+	// Output: 456
+}

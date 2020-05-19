@@ -27,9 +27,21 @@ func betterParser(v string) (result results.IntResult) {
     return
 }
 
+func betterParser2(v string) (result results.IntResult) {
+    result.Set(strconv.Atoi(v))
+    return
+}
+
+
 func main() {
     result := betterParser("123").Unwrap()
     fmt.Printf("Got: %d\n", result)
+
+    result2 := betterParser2("456").Unwrap()
+    fmt.Printf("Got: %d\n", result2)
+
+    // This will panic if you uncomment
+    // _ = betterParser2("foo").Unwrap()
 }
 ```
 
