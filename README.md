@@ -2,6 +2,15 @@
 
 Similar `Result` structs like in Rust or other languages.
 
+At a very high level, if Go had generics it would look like this:
+
+```go
+type Result<T> struct {
+    value *T
+    err error
+}
+```
+
 See [`example_test.go`](example_test.go) for usage.
 
 ## Example
