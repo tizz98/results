@@ -1,0 +1,63 @@
+package {{.Pkg}}
+
+type {{.ResultName}} struct {
+    {{.FieldName}} *{{.T}}
+    err error
+}
+
+func (r *{{.ResultName}}) IsOk() bool {
+    return r.err == nil
+}
+
+func (r *{{.ResultName}}) IsErr() bool {
+    return r.err != nil
+}
+
+func (r *{{.ResultName}}) Unwrap() {{.T}} {
+    if r.IsErr() {
+        panic("cannot unwrap {{.ResultName}}, it is an error")
+    }
+    return *r.{{.FieldName}}
+}
+
+func (r *{{.ResultName}}) UnwrapOr(v {{.T}}) {{.T}} {
+    if r.IsOk() {
+        return r.Unwrap()
+    }
+    return v
+}
+
+func (r *{{.ResultName}}) UnwrapOrElse(fn func(err error) {{.T}}) {{.T}} {
+    if r.IsOk() {
+        return r.Unwrap()
+    }
+    return fn(r.err)
+}
+
+func (r *{{.ResultName}}) Ok(v {{.T}}) {
+    r.checkAbilityToSet()
+    r.{{.FieldName}} = &v
+}
+
+func (r *{{.ResultName}}) Err(err error) {
+    r.checkAbilityToSet()
+    r.err = err
+}
+
+func (r *{{.ResultName}}) GetErr() error {
+    return r.err
+}
+
+func (r *{{.ResultName}}) Tup() ({{.T}}, error) {
+    return r.UnwrapOr({{.TupDefault}}), r.err
+}
+
+func (r *{{.ResultName}}) checkAbilityToSet() {
+    if r.isSet() {
+        panic("{{.ResultName}} is already set, cannot set again")
+    }
+}
+
+func (r *{{.ResultName}}) isSet() bool {
+    return r.{{.FieldName}} != nil || r.err != nil
+}
