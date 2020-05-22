@@ -19,6 +19,7 @@ See [`example_test.go`](example_test.go) for usage.
 package main
 
 import (
+    "context"
     "fmt"
     "strconv"
 
@@ -51,6 +52,16 @@ func main() {
 
     // This will panic if you uncomment
     // _ = betterParser2("foo").Unwrap()
+
+    // Context usage
+    ctx := context.Background()
+    ctx = results.ContextWithInt(ctx, "foo", 4242)
+
+    result3 := results.IntFromContext(ctx, "foo")
+    result4 := results.IntFromContext(ctx, "bar")
+
+    fmt.Printf("%v: %d, %v: %d\n", result3.IsOk(), result3.Unwrap(), result4.IsOk(), result4.UnwrapOr(4567))
+    // Output: true: 4242, false: 4567
 }
 ```
 
