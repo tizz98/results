@@ -1,6 +1,7 @@
 package results
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 )
@@ -55,4 +56,15 @@ func ExampleIntResult_Set() {
 	result.Set(strconv.Atoi("456"))
 	fmt.Printf("%d\n", result.Unwrap())
 	// Output: 456
+}
+
+func ExampleIntFromContext() {
+	ctx := context.Background()
+	ctx = ContextWithInt(ctx, "foo", 4242)
+
+	result1 := IntFromContext(ctx, "foo")
+	result2 := IntFromContext(ctx, "bar")
+
+	fmt.Printf("%v: %d, %v: %d\n", result1.IsOk(), result1.Unwrap(), result2.IsOk(), result2.UnwrapOr(4567))
+	// Output: true: 4242, false: 4567
 }

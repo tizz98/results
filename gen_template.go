@@ -86,4 +86,19 @@ func (r {{.ResultName}}) checkAbilityToSet() {
 func (r {{.ResultName}}) isSet() bool {
     return r.{{.FieldName}} != nil || r.err != nil
 }
+
+{{if .GenContext}}
+func ContextWith{{.Name}}(ctx context.Context, key interface{}, v {{.T}}) context.Context {
+	return context.WithValue(ctx, key, v)
+}
+
+func {{.Name}}FromContext(ctx context.Context, key interface{}) (result {{.ResultName}}) {
+	if v, ok := ctx.Value(key).({{.T}}); !ok {
+		result.Err(fmt.Errorf("%#v not found in context", key))
+	} else {
+		result.Ok(v)
+	}
+	return
+}
+{{end}}
 `

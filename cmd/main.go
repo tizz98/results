@@ -26,10 +26,15 @@ func main() {
 	flag.StringVar(&input.T, "t", "", "the type to generate the result for")
 	flag.StringVar(&input.TupDefault, "tup-default", "", "the default value to return when calling .Tup()")
 	flag.BoolVar(&verbose, "verbose", false, "enable verbose logging")
+	flag.BoolVar(&input.GenContext, "gen-ctx", false, "generate context functions")
+	flag.StringVar(&input.Name, "name", "", "a human friendly name for the type")
 	flag.Parse()
 
 	if input.ResultName == "" {
 		input.ResultName = fmt.Sprintf("%sResult", strcase.ToCamel(input.T))
+	}
+	if input.Name == "" {
+		input.Name = strcase.ToCamel(input.T)
 	}
 
 	if verbose {
