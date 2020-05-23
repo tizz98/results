@@ -35,6 +35,13 @@ func (r Int64Result) Unwrap() int64 {
 	return *r.value
 }
 
+// UnwrapTo will call the .Err() method on the other Result if this Int64Result has an error.
+func (r Int64Result) UnwrapTo(other Result) {
+	if r.IsErr() {
+		other.Err(r.GetErr())
+	}
+}
+
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
 func (r Int64Result) Expect(message string) int64 {
 	if r.IsErr() {

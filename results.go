@@ -23,4 +23,5 @@ type Result interface {
 	IsOk() bool
 	IsErr() bool
 	GetErr() error
+	Err(err error)
 }

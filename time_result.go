@@ -36,6 +36,13 @@ func (r TimeResult) Unwrap() time.Time {
 	return *r.value
 }
 
+// UnwrapTo will call the .Err() method on the other Result if this TimeResult has an error.
+func (r TimeResult) UnwrapTo(other Result) {
+	if r.IsErr() {
+		other.Err(r.GetErr())
+	}
+}
+
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
 func (r TimeResult) Expect(message string) time.Time {
 	if r.IsErr() {

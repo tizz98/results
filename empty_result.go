@@ -4,13 +4,21 @@ import "fmt"
 
 // EmptyResult only contains an error, no other value.
 // It is useful for functions that only return errors.
+// Similar to Result<(), Box<dyn Error>> in Rust.
 type EmptyResult struct {
-	err error
+	err    error
+	wasSet bool
 }
 
 func SetNewEmptyResult(err error) (result EmptyResult) {
 	result.Set(err)
 	return
+}
+
+// Ok is a noop but it will prevent setting this result again.
+func (r *EmptyResult) Ok() {
+	r.checkAbilityToSet()
+	r.wasSet = true
 }
 
 // IsOk returns true when the result contains a non-nil result with no error
@@ -27,6 +35,13 @@ func (r EmptyResult) IsErr() bool {
 func (r EmptyResult) Unwrap() {
 	if r.IsErr() {
 		panic("cannot unwrap EmptyResult, it is an error")
+	}
+}
+
+// UnwrapTo will call the .Err() method on the other Result if this EmptyResult has an error.
+func (r EmptyResult) UnwrapTo(other Result) {
+	if r.IsErr() {
+		other.Err(r.GetErr())
 	}
 }
 
@@ -50,6 +65,7 @@ func (r EmptyResult) Expectf(format string, args ...interface{}) {
 func (r *EmptyResult) Err(err error) {
 	r.checkAbilityToSet()
 	r.err = err
+	r.wasSet = true
 }
 
 // GetError returns the error of the result. It may be nil, so check with EmptyResult.IsErr() first.
@@ -66,11 +82,7 @@ func (r *EmptyResult) Set(err error) {
 }
 
 func (r EmptyResult) checkAbilityToSet() {
-	if r.isSet() {
+	if r.wasSet {
 		panic("EmptyResult is already set, cannot set again")
 	}
-}
-
-func (r EmptyResult) isSet() bool {
-	return r.err != nil
 }

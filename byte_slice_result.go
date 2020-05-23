@@ -35,6 +35,13 @@ func (r ByteSliceResult) Unwrap() []byte {
 	return *r.value
 }
 
+// UnwrapTo will call the .Err() method on the other Result if this ByteSliceResult has an error.
+func (r ByteSliceResult) UnwrapTo(other Result) {
+	if r.IsErr() {
+		other.Err(r.GetErr())
+	}
+}
+
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
 func (r ByteSliceResult) Expect(message string) []byte {
 	if r.IsErr() {

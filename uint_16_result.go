@@ -35,6 +35,13 @@ func (r Uint16Result) Unwrap() uint16 {
 	return *r.value
 }
 
+// UnwrapTo will call the .Err() method on the other Result if this Uint16Result has an error.
+func (r Uint16Result) UnwrapTo(other Result) {
+	if r.IsErr() {
+		other.Err(r.GetErr())
+	}
+}
+
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
 func (r Uint16Result) Expect(message string) uint16 {
 	if r.IsErr() {

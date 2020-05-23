@@ -32,6 +32,13 @@ func (r {{.ResultName}}) Unwrap() {{.T}} {
     return *r.{{.FieldName}}
 }
 
+// UnwrapTo will call the .Err() method on the other Result if this {{.ResultName}} has an error.
+func (r {{.ResultName}}) UnwrapTo(other Result) {
+	if r.IsErr() {
+		other.Err(r.GetErr())
+	}
+}
+
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
 func (r {{.ResultName}}) Expect(message string) {{.T}} {
 	if r.IsErr() {
