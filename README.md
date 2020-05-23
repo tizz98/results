@@ -11,6 +11,15 @@ type Result<T> struct {
 }
 ```
 
+In [Go 2](https://blog.tempus-ex.com/generics-in-go-how-they-work-and-how-to-play-with-them/), we might someday be able to write:
+
+```go
+type Result(type T) struct {
+    value *T
+    err error
+}
+```
+
 See [`example_test.go`](example_test.go) for usage.
 
 ## Example
