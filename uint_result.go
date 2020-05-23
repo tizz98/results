@@ -11,6 +11,12 @@ type UintResult struct {
 	err   error
 }
 
+// SetNewUintResult is a shortcut to creating a new UintResult and then calling .Set(v, err) on it.
+func SetNewUintResult(v uint, err error) (result UintResult) {
+	result.Set(v, err)
+	return
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r UintResult) IsOk() bool {
 	return r.err == nil
@@ -25,6 +31,23 @@ func (r UintResult) IsErr() bool {
 func (r UintResult) Unwrap() uint {
 	if r.IsErr() {
 		panic("cannot unwrap UintResult, it is an error")
+	}
+	return *r.value
+}
+
+// Expect panics with the specified message if the result contains an error, otherwise it returns the value
+func (r UintResult) Expect(message string) uint {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", message, r.GetErr()))
+	}
+	return *r.value
+}
+
+// Expectf panics with the specified message if the result contains an error, otherwise it returns the value.
+// This is different than Expect because if will automatically format the string with the given args.
+func (r UintResult) Expectf(format string, args ...interface{}) uint {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), r.GetErr()))
 	}
 	return *r.value
 }
@@ -90,10 +113,13 @@ func (r UintResult) isSet() bool {
 	return r.value != nil || r.err != nil
 }
 
+// ContextWithUint embeds the given value of uint into the context for later retrieval with UintFromContext
 func ContextWithUint(ctx context.Context, key interface{}, v uint) context.Context {
 	return context.WithValue(ctx, key, v)
 }
 
+// UintFromContext attempts to retrieve a uint value from the specified context. A UintResult is returned
+// which can be used to inspect the success or failure of retrieval.
 func UintFromContext(ctx context.Context, key interface{}) (result UintResult) {
 	if v, ok := ctx.Value(key).(uint); !ok {
 		result.Err(fmt.Errorf("%#v not found in context", key))

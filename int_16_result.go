@@ -11,6 +11,12 @@ type Int16Result struct {
 	err   error
 }
 
+// SetNewInt16Result is a shortcut to creating a new Int16Result and then calling .Set(v, err) on it.
+func SetNewInt16Result(v int16, err error) (result Int16Result) {
+	result.Set(v, err)
+	return
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r Int16Result) IsOk() bool {
 	return r.err == nil
@@ -25,6 +31,23 @@ func (r Int16Result) IsErr() bool {
 func (r Int16Result) Unwrap() int16 {
 	if r.IsErr() {
 		panic("cannot unwrap Int16Result, it is an error")
+	}
+	return *r.value
+}
+
+// Expect panics with the specified message if the result contains an error, otherwise it returns the value
+func (r Int16Result) Expect(message string) int16 {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", message, r.GetErr()))
+	}
+	return *r.value
+}
+
+// Expectf panics with the specified message if the result contains an error, otherwise it returns the value.
+// This is different than Expect because if will automatically format the string with the given args.
+func (r Int16Result) Expectf(format string, args ...interface{}) int16 {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), r.GetErr()))
 	}
 	return *r.value
 }
@@ -90,10 +113,13 @@ func (r Int16Result) isSet() bool {
 	return r.value != nil || r.err != nil
 }
 
+// ContextWithInt16 embeds the given value of int16 into the context for later retrieval with Int16FromContext
 func ContextWithInt16(ctx context.Context, key interface{}, v int16) context.Context {
 	return context.WithValue(ctx, key, v)
 }
 
+// Int16FromContext attempts to retrieve a int16 value from the specified context. A Int16Result is returned
+// which can be used to inspect the success or failure of retrieval.
 func Int16FromContext(ctx context.Context, key interface{}) (result Int16Result) {
 	if v, ok := ctx.Value(key).(int16); !ok {
 		result.Err(fmt.Errorf("%#v not found in context", key))

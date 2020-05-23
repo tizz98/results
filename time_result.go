@@ -12,6 +12,12 @@ type TimeResult struct {
 	err   error
 }
 
+// SetNewTimeResult is a shortcut to creating a new TimeResult and then calling .Set(v, err) on it.
+func SetNewTimeResult(v time.Time, err error) (result TimeResult) {
+	result.Set(v, err)
+	return
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r TimeResult) IsOk() bool {
 	return r.err == nil
@@ -26,6 +32,23 @@ func (r TimeResult) IsErr() bool {
 func (r TimeResult) Unwrap() time.Time {
 	if r.IsErr() {
 		panic("cannot unwrap TimeResult, it is an error")
+	}
+	return *r.value
+}
+
+// Expect panics with the specified message if the result contains an error, otherwise it returns the value
+func (r TimeResult) Expect(message string) time.Time {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", message, r.GetErr()))
+	}
+	return *r.value
+}
+
+// Expectf panics with the specified message if the result contains an error, otherwise it returns the value.
+// This is different than Expect because if will automatically format the string with the given args.
+func (r TimeResult) Expectf(format string, args ...interface{}) time.Time {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), r.GetErr()))
 	}
 	return *r.value
 }
@@ -91,10 +114,13 @@ func (r TimeResult) isSet() bool {
 	return r.value != nil || r.err != nil
 }
 
+// ContextWithTime embeds the given value of time.Time into the context for later retrieval with TimeFromContext
 func ContextWithTime(ctx context.Context, key interface{}, v time.Time) context.Context {
 	return context.WithValue(ctx, key, v)
 }
 
+// TimeFromContext attempts to retrieve a time.Time value from the specified context. A TimeResult is returned
+// which can be used to inspect the success or failure of retrieval.
 func TimeFromContext(ctx context.Context, key interface{}) (result TimeResult) {
 	if v, ok := ctx.Value(key).(time.Time); !ok {
 		result.Err(fmt.Errorf("%#v not found in context", key))

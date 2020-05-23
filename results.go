@@ -17,6 +17,8 @@
 //go:generate go run github.com/tizz98/results/cmd -pkg results -t *time.Time -tup-default nil -result-name TimePtrResult -name TimePtr -gen-ctx
 package results
 
+// Result is the common interface all "results" share. Because the return value of .Unwrap() and similar calls is dynamic,
+// These are the only functions that can be used in a generic way, if needed.
 type Result interface {
 	IsOk() bool
 	IsErr() bool

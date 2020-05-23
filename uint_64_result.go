@@ -11,6 +11,12 @@ type Uint64Result struct {
 	err   error
 }
 
+// SetNewUint64Result is a shortcut to creating a new Uint64Result and then calling .Set(v, err) on it.
+func SetNewUint64Result(v uint64, err error) (result Uint64Result) {
+	result.Set(v, err)
+	return
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r Uint64Result) IsOk() bool {
 	return r.err == nil
@@ -25,6 +31,23 @@ func (r Uint64Result) IsErr() bool {
 func (r Uint64Result) Unwrap() uint64 {
 	if r.IsErr() {
 		panic("cannot unwrap Uint64Result, it is an error")
+	}
+	return *r.value
+}
+
+// Expect panics with the specified message if the result contains an error, otherwise it returns the value
+func (r Uint64Result) Expect(message string) uint64 {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", message, r.GetErr()))
+	}
+	return *r.value
+}
+
+// Expectf panics with the specified message if the result contains an error, otherwise it returns the value.
+// This is different than Expect because if will automatically format the string with the given args.
+func (r Uint64Result) Expectf(format string, args ...interface{}) uint64 {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), r.GetErr()))
 	}
 	return *r.value
 }
@@ -90,10 +113,13 @@ func (r Uint64Result) isSet() bool {
 	return r.value != nil || r.err != nil
 }
 
+// ContextWithUint64 embeds the given value of uint64 into the context for later retrieval with Uint64FromContext
 func ContextWithUint64(ctx context.Context, key interface{}, v uint64) context.Context {
 	return context.WithValue(ctx, key, v)
 }
 
+// Uint64FromContext attempts to retrieve a uint64 value from the specified context. A Uint64Result is returned
+// which can be used to inspect the success or failure of retrieval.
 func Uint64FromContext(ctx context.Context, key interface{}) (result Uint64Result) {
 	if v, ok := ctx.Value(key).(uint64); !ok {
 		result.Err(fmt.Errorf("%#v not found in context", key))

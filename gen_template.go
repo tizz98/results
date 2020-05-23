@@ -8,6 +8,12 @@ type {{.ResultName}} struct {
     err error
 }
 
+// SetNew{{.ResultName}} is a shortcut to creating a new {{.ResultName}} and then calling .Set(v, err) on it.
+func SetNew{{.ResultName}}(v {{.T}}, err error) (result {{.ResultName}}) {
+	result.Set(v, err)
+	return
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r {{.ResultName}}) IsOk() bool {
     return r.err == nil
@@ -24,6 +30,23 @@ func (r {{.ResultName}}) Unwrap() {{.T}} {
         panic("cannot unwrap {{.ResultName}}, it is an error")
     }
     return *r.{{.FieldName}}
+}
+
+// Expect panics with the specified message if the result contains an error, otherwise it returns the value
+func (r {{.ResultName}}) Expect(message string) {{.T}} {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", message, r.GetErr()))
+	}
+	return *r.{{.FieldName}}
+}
+
+// Expectf panics with the specified message if the result contains an error, otherwise it returns the value.
+// This is different than Expect because if will automatically format the string with the given args.
+func (r {{.ResultName}}) Expectf(format string, args ...interface{}) {{.T}} {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), r.GetErr()))
+	}
+	return *r.{{.FieldName}}
 }
 
 // UnwrapOr returns the value if there is not an error, otherwise the specified value is returned
@@ -88,10 +111,13 @@ func (r {{.ResultName}}) isSet() bool {
 }
 
 {{if .GenContext}}
+// ContextWith{{.Name}} embeds the given value of {{.T}} into the context for later retrieval with {{.Name}}FromContext
 func ContextWith{{.Name}}(ctx context.Context, key interface{}, v {{.T}}) context.Context {
 	return context.WithValue(ctx, key, v)
 }
 
+// {{.Name}}FromContext attempts to retrieve a {{.T}} value from the specified context. A {{.ResultName}} is returned
+// which can be used to inspect the success or failure of retrieval. 
 func {{.Name}}FromContext(ctx context.Context, key interface{}) (result {{.ResultName}}) {
 	if v, ok := ctx.Value(key).({{.T}}); !ok {
 		result.Err(fmt.Errorf("%#v not found in context", key))

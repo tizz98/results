@@ -11,6 +11,12 @@ type Float32Result struct {
 	err   error
 }
 
+// SetNewFloat32Result is a shortcut to creating a new Float32Result and then calling .Set(v, err) on it.
+func SetNewFloat32Result(v float32, err error) (result Float32Result) {
+	result.Set(v, err)
+	return
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r Float32Result) IsOk() bool {
 	return r.err == nil
@@ -25,6 +31,23 @@ func (r Float32Result) IsErr() bool {
 func (r Float32Result) Unwrap() float32 {
 	if r.IsErr() {
 		panic("cannot unwrap Float32Result, it is an error")
+	}
+	return *r.value
+}
+
+// Expect panics with the specified message if the result contains an error, otherwise it returns the value
+func (r Float32Result) Expect(message string) float32 {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", message, r.GetErr()))
+	}
+	return *r.value
+}
+
+// Expectf panics with the specified message if the result contains an error, otherwise it returns the value.
+// This is different than Expect because if will automatically format the string with the given args.
+func (r Float32Result) Expectf(format string, args ...interface{}) float32 {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), r.GetErr()))
 	}
 	return *r.value
 }
@@ -90,10 +113,13 @@ func (r Float32Result) isSet() bool {
 	return r.value != nil || r.err != nil
 }
 
+// ContextWithFloat32 embeds the given value of float32 into the context for later retrieval with Float32FromContext
 func ContextWithFloat32(ctx context.Context, key interface{}, v float32) context.Context {
 	return context.WithValue(ctx, key, v)
 }
 
+// Float32FromContext attempts to retrieve a float32 value from the specified context. A Float32Result is returned
+// which can be used to inspect the success or failure of retrieval.
 func Float32FromContext(ctx context.Context, key interface{}) (result Float32Result) {
 	if v, ok := ctx.Value(key).(float32); !ok {
 		result.Err(fmt.Errorf("%#v not found in context", key))

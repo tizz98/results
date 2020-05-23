@@ -11,6 +11,12 @@ type Uint32Result struct {
 	err   error
 }
 
+// SetNewUint32Result is a shortcut to creating a new Uint32Result and then calling .Set(v, err) on it.
+func SetNewUint32Result(v uint32, err error) (result Uint32Result) {
+	result.Set(v, err)
+	return
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r Uint32Result) IsOk() bool {
 	return r.err == nil
@@ -25,6 +31,23 @@ func (r Uint32Result) IsErr() bool {
 func (r Uint32Result) Unwrap() uint32 {
 	if r.IsErr() {
 		panic("cannot unwrap Uint32Result, it is an error")
+	}
+	return *r.value
+}
+
+// Expect panics with the specified message if the result contains an error, otherwise it returns the value
+func (r Uint32Result) Expect(message string) uint32 {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", message, r.GetErr()))
+	}
+	return *r.value
+}
+
+// Expectf panics with the specified message if the result contains an error, otherwise it returns the value.
+// This is different than Expect because if will automatically format the string with the given args.
+func (r Uint32Result) Expectf(format string, args ...interface{}) uint32 {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), r.GetErr()))
 	}
 	return *r.value
 }
@@ -90,10 +113,13 @@ func (r Uint32Result) isSet() bool {
 	return r.value != nil || r.err != nil
 }
 
+// ContextWithUint32 embeds the given value of uint32 into the context for later retrieval with Uint32FromContext
 func ContextWithUint32(ctx context.Context, key interface{}, v uint32) context.Context {
 	return context.WithValue(ctx, key, v)
 }
 
+// Uint32FromContext attempts to retrieve a uint32 value from the specified context. A Uint32Result is returned
+// which can be used to inspect the success or failure of retrieval.
 func Uint32FromContext(ctx context.Context, key interface{}) (result Uint32Result) {
 	if v, ok := ctx.Value(key).(uint32); !ok {
 		result.Err(fmt.Errorf("%#v not found in context", key))

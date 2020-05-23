@@ -1,15 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
-	"io"
-	"log"
+	"io/ioutil"
 	"os"
-	"os/exec"
 
 	"github.com/iancoleman/strcase"
-	"github.com/joncalhoun/pipe"
+	"golang.org/x/tools/imports"
 
 	"github.com/tizz98/results"
 )
@@ -30,12 +29,8 @@ func main() {
 	flag.StringVar(&input.Name, "name", "", "a human friendly name for the type")
 	flag.Parse()
 
-	if input.ResultName == "" {
-		input.ResultName = fmt.Sprintf("%sResult", strcase.ToCamel(input.T))
-	}
-	if input.Name == "" {
-		input.Name = strcase.ToCamel(input.T)
-	}
+	input.SetResultNameIfEmpty(fmt.Sprintf("%sResult", strcase.ToCamel(input.T)))
+	input.SetNameIfEmpty(strcase.ToCamel(input.T))
 
 	if verbose {
 		fmt.Printf("%#v\n", input)
@@ -47,49 +42,14 @@ func main() {
 	}
 
 	fileName := fmt.Sprintf("%s.go", strcase.ToSnake(input.ResultName))
+	var buf bytes.Buffer
 
-	_, err := os.Stat(fileName)
-	if err != nil {
-		if !os.IsNotExist(err) {
-			panic(err)
-		}
-	} else {
-		if err := os.Remove(fileName); err != nil {
-			panic(err)
-		}
-	}
+	results.SetNewEmptyResult(results.GenerateResult(&buf, input)).
+		Expectf("unable to generate for %s", input.T)
 
-	f, err := os.Create(fileName)
-	if err != nil {
-		panic(err)
-	}
+	data := results.SetNewByteSliceResult(imports.Process(fileName, buf.Bytes(), nil)).
+		Expect("unable to format file using goimports")
 
-	p, err := pipe.New(
-		exec.Command("gofmt"),
-		exec.Command("goimports"),
-	)
-	if err != nil {
-		log.Fatalf("unable to create pipe: %s", err.Error())
-	}
-
-	r, w := io.Pipe()
-	p.Stdin = r
-	p.Stdout = f
-
-	if err := p.Start(); err != nil {
-		log.Fatalf("unable to start pipe: %s", err.Error())
-	}
-
-	if err := results.GenerateResult(w, input); err != nil {
-		panic(err)
-	}
-
-	if err := w.Close(); err != nil {
-		log.Fatalf("unable to close pipe writer: %s", err.Error())
-	}
-
-	if err := p.Wait(); err != nil {
-		log.Fatalf("error waitng for pipe to finish: %s", err.Error())
-	}
-
+	results.SetNewEmptyResult(ioutil.WriteFile(fileName, data, 0644)).
+		Expect("unable to write generated code to file")
 }

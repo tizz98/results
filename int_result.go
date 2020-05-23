@@ -11,6 +11,12 @@ type IntResult struct {
 	err   error
 }
 
+// SetNewIntResult is a shortcut to creating a new IntResult and then calling .Set(v, err) on it.
+func SetNewIntResult(v int, err error) (result IntResult) {
+	result.Set(v, err)
+	return
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r IntResult) IsOk() bool {
 	return r.err == nil
@@ -25,6 +31,23 @@ func (r IntResult) IsErr() bool {
 func (r IntResult) Unwrap() int {
 	if r.IsErr() {
 		panic("cannot unwrap IntResult, it is an error")
+	}
+	return *r.value
+}
+
+// Expect panics with the specified message if the result contains an error, otherwise it returns the value
+func (r IntResult) Expect(message string) int {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", message, r.GetErr()))
+	}
+	return *r.value
+}
+
+// Expectf panics with the specified message if the result contains an error, otherwise it returns the value.
+// This is different than Expect because if will automatically format the string with the given args.
+func (r IntResult) Expectf(format string, args ...interface{}) int {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), r.GetErr()))
 	}
 	return *r.value
 }
@@ -90,10 +113,13 @@ func (r IntResult) isSet() bool {
 	return r.value != nil || r.err != nil
 }
 
+// ContextWithInt embeds the given value of int into the context for later retrieval with IntFromContext
 func ContextWithInt(ctx context.Context, key interface{}, v int) context.Context {
 	return context.WithValue(ctx, key, v)
 }
 
+// IntFromContext attempts to retrieve a int value from the specified context. A IntResult is returned
+// which can be used to inspect the success or failure of retrieval.
 func IntFromContext(ctx context.Context, key interface{}) (result IntResult) {
 	if v, ok := ctx.Value(key).(int); !ok {
 		result.Err(fmt.Errorf("%#v not found in context", key))

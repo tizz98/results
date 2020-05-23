@@ -28,15 +28,26 @@ func (i Input) Valid() bool {
 		i.FieldName != "" &&
 		i.T != "" &&
 		i.TupDefault != ""
-
 }
 
-func (i *Input) ReplacePlaceholders() {
+func (i *Input) SetResultNameIfEmpty(name string) {
+	if i.ResultName == "" {
+		i.ResultName = name
+	}
+}
+
+func (i *Input) SetNameIfEmpty(name string) {
+	if i.Name == "" {
+		i.Name = name
+	}
+}
+
+func (i *Input) replacePlaceholders() {
 	i.TupDefault = strings.ReplaceAll(i.TupDefault, "emptyString", `""`)
 	i.Name = fmt.Sprintf("%s%s", string(unicode.ToUpper(rune(i.Name[0]))), i.Name[1:len(i.Name)])
 }
 
 func GenerateResult(w io.Writer, in Input) error {
-	in.ReplacePlaceholders()
+	in.replacePlaceholders()
 	return tmpl.Execute(w, in)
 }

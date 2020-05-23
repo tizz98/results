@@ -11,6 +11,12 @@ type Int8Result struct {
 	err   error
 }
 
+// SetNewInt8Result is a shortcut to creating a new Int8Result and then calling .Set(v, err) on it.
+func SetNewInt8Result(v int8, err error) (result Int8Result) {
+	result.Set(v, err)
+	return
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r Int8Result) IsOk() bool {
 	return r.err == nil
@@ -25,6 +31,23 @@ func (r Int8Result) IsErr() bool {
 func (r Int8Result) Unwrap() int8 {
 	if r.IsErr() {
 		panic("cannot unwrap Int8Result, it is an error")
+	}
+	return *r.value
+}
+
+// Expect panics with the specified message if the result contains an error, otherwise it returns the value
+func (r Int8Result) Expect(message string) int8 {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", message, r.GetErr()))
+	}
+	return *r.value
+}
+
+// Expectf panics with the specified message if the result contains an error, otherwise it returns the value.
+// This is different than Expect because if will automatically format the string with the given args.
+func (r Int8Result) Expectf(format string, args ...interface{}) int8 {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), r.GetErr()))
 	}
 	return *r.value
 }
@@ -90,10 +113,13 @@ func (r Int8Result) isSet() bool {
 	return r.value != nil || r.err != nil
 }
 
+// ContextWithInt8 embeds the given value of int8 into the context for later retrieval with Int8FromContext
 func ContextWithInt8(ctx context.Context, key interface{}, v int8) context.Context {
 	return context.WithValue(ctx, key, v)
 }
 
+// Int8FromContext attempts to retrieve a int8 value from the specified context. A Int8Result is returned
+// which can be used to inspect the success or failure of retrieval.
 func Int8FromContext(ctx context.Context, key interface{}) (result Int8Result) {
 	if v, ok := ctx.Value(key).(int8); !ok {
 		result.Err(fmt.Errorf("%#v not found in context", key))

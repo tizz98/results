@@ -11,6 +11,12 @@ type ByteSliceResult struct {
 	err   error
 }
 
+// SetNewByteSliceResult is a shortcut to creating a new ByteSliceResult and then calling .Set(v, err) on it.
+func SetNewByteSliceResult(v []byte, err error) (result ByteSliceResult) {
+	result.Set(v, err)
+	return
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r ByteSliceResult) IsOk() bool {
 	return r.err == nil
@@ -25,6 +31,23 @@ func (r ByteSliceResult) IsErr() bool {
 func (r ByteSliceResult) Unwrap() []byte {
 	if r.IsErr() {
 		panic("cannot unwrap ByteSliceResult, it is an error")
+	}
+	return *r.value
+}
+
+// Expect panics with the specified message if the result contains an error, otherwise it returns the value
+func (r ByteSliceResult) Expect(message string) []byte {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", message, r.GetErr()))
+	}
+	return *r.value
+}
+
+// Expectf panics with the specified message if the result contains an error, otherwise it returns the value.
+// This is different than Expect because if will automatically format the string with the given args.
+func (r ByteSliceResult) Expectf(format string, args ...interface{}) []byte {
+	if r.IsErr() {
+		panic(fmt.Errorf("%s: %w", fmt.Sprintf(format, args...), r.GetErr()))
 	}
 	return *r.value
 }
@@ -90,10 +113,13 @@ func (r ByteSliceResult) isSet() bool {
 	return r.value != nil || r.err != nil
 }
 
+// ContextWithByteSlice embeds the given value of []byte into the context for later retrieval with ByteSliceFromContext
 func ContextWithByteSlice(ctx context.Context, key interface{}, v []byte) context.Context {
 	return context.WithValue(ctx, key, v)
 }
 
+// ByteSliceFromContext attempts to retrieve a []byte value from the specified context. A ByteSliceResult is returned
+// which can be used to inspect the success or failure of retrieval.
 func ByteSliceFromContext(ctx context.Context, key interface{}) (result ByteSliceResult) {
 	if v, ok := ctx.Value(key).([]byte); !ok {
 		result.Err(fmt.Errorf("%#v not found in context", key))
