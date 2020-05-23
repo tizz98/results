@@ -6,6 +6,8 @@ import (
 	"strings"
 	"text/template"
 	"unicode"
+
+	"github.com/iancoleman/strcase"
 )
 
 var (
@@ -30,15 +32,15 @@ func (i Input) Valid() bool {
 		i.TupDefault != ""
 }
 
-func (i *Input) SetResultNameIfEmpty(name string) {
+func (i *Input) EnsureResultNameNotEmpty() {
 	if i.ResultName == "" {
-		i.ResultName = name
+		i.ResultName = fmt.Sprintf("%sResult", strcase.ToCamel(i.T))
 	}
 }
 
-func (i *Input) SetNameIfEmpty(name string) {
+func (i *Input) EnsureNameNotEmpty() {
 	if i.Name == "" {
-		i.Name = name
+		i.Name = strcase.ToCamel(i.T)
 	}
 }
 
@@ -47,7 +49,8 @@ func (i *Input) replacePlaceholders() {
 	i.Name = fmt.Sprintf("%s%s", string(unicode.ToUpper(rune(i.Name[0]))), i.Name[1:len(i.Name)])
 }
 
-func GenerateResult(w io.Writer, in Input) error {
+func GenerateResult(w io.Writer, in Input) (result EmptyResult) {
 	in.replacePlaceholders()
-	return tmpl.Execute(w, in)
+	result.Set(tmpl.Execute(w, in))
+	return
 }

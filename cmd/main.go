@@ -29,8 +29,8 @@ func main() {
 	flag.StringVar(&input.Name, "name", "", "a human friendly name for the type")
 	flag.Parse()
 
-	input.SetResultNameIfEmpty(fmt.Sprintf("%sResult", strcase.ToCamel(input.T)))
-	input.SetNameIfEmpty(strcase.ToCamel(input.T))
+	input.EnsureResultNameNotEmpty()
+	input.EnsureNameNotEmpty()
 
 	if verbose {
 		fmt.Printf("%#v\n", input)
@@ -44,12 +44,17 @@ func main() {
 	fileName := fmt.Sprintf("%s.go", strcase.ToSnake(input.ResultName))
 	var buf bytes.Buffer
 
-	results.SetNewEmptyResult(results.GenerateResult(&buf, input)).
-		Expectf("unable to generate for %s", input.T)
+	results.GenerateResult(&buf, input).Expectf("unable to generate for %s", input.T)
+	data := processImports(fileName, buf.Bytes()).Expect("unable to format file using goimports")
+	writeFile(fileName, data).Expect("unable to write generated code to file")
+}
 
-	data := results.SetNewByteSliceResult(imports.Process(fileName, buf.Bytes(), nil)).
-		Expect("unable to format file using goimports")
+func processImports(fileName string, data []byte) (result results.ByteSliceResult) {
+	result.Set(imports.Process(fileName, data, nil))
+	return
+}
 
-	results.SetNewEmptyResult(ioutil.WriteFile(fileName, data, 0644)).
-		Expect("unable to write generated code to file")
+func writeFile(fileName string, data []byte) (result results.EmptyResult) {
+	result.Set(ioutil.WriteFile(fileName, data, 0644))
+	return
 }
