@@ -77,6 +77,9 @@ func (r *EmptyResult) Set(err error) {
 	}
 }
 
+// Ptr returns a pointer to EmptyResult
+func (r EmptyResult) Ptr() *EmptyResult { return &r }
+
 func (r EmptyResult) clear() {
 	r.err = nil
 }

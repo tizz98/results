@@ -144,6 +144,9 @@ func (r *Uint32Result) SetOptional(v *uint32, err error) {
 	}
 }
 
+// Ptr returns a pointer to the Uint32Result
+func (r Uint32Result) Ptr() *Uint32Result { return &r }
+
 func (r Uint32Result) clear() {
 	r.value = nil
 	r.err = nil

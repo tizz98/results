@@ -144,6 +144,9 @@ func (r *Uint8Result) SetOptional(v *uint8, err error) {
 	}
 }
 
+// Ptr returns a pointer to the Uint8Result
+func (r Uint8Result) Ptr() *Uint8Result { return &r }
+
 func (r Uint8Result) clear() {
 	r.value = nil
 	r.err = nil

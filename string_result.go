@@ -144,6 +144,9 @@ func (r *StringResult) SetOptional(v *string, err error) {
 	}
 }
 
+// Ptr returns a pointer to the StringResult
+func (r StringResult) Ptr() *StringResult { return &r }
+
 func (r StringResult) clear() {
 	r.value = nil
 	r.err = nil

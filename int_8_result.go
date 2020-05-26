@@ -144,6 +144,9 @@ func (r *Int8Result) SetOptional(v *int8, err error) {
 	}
 }
 
+// Ptr returns a pointer to the Int8Result
+func (r Int8Result) Ptr() *Int8Result { return &r }
+
 func (r Int8Result) clear() {
 	r.value = nil
 	r.err = nil

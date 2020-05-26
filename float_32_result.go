@@ -144,6 +144,9 @@ func (r *Float32Result) SetOptional(v *float32, err error) {
 	}
 }
 
+// Ptr returns a pointer to the Float32Result
+func (r Float32Result) Ptr() *Float32Result { return &r }
+
 func (r Float32Result) clear() {
 	r.value = nil
 	r.err = nil

@@ -44,9 +44,14 @@ func main() {
 	fileName := fmt.Sprintf("%s.go", strcase.ToSnake(input.ResultName))
 	var buf bytes.Buffer
 
-	results.GenerateResult(&buf, input).Expectf("unable to generate for %s", input.T)
-	data := processImports(fileName, buf.Bytes()).Expect("unable to format file using goimports")
-	writeFile(fileName, data).Expect("unable to write generated code to file")
+	results.GenerateResult(&buf, input).
+		Expectf("unable to generate for %s", input.T)
+
+	data := processImports(fileName, buf.Bytes()).
+		Expect("unable to format file using goimports")
+
+	writeFile(fileName, data).
+		Expect("unable to write generated code to file")
 }
 
 func processImports(fileName string, data []byte) (result results.ByteSliceResult) {

@@ -144,6 +144,9 @@ func (r *ByteSliceResult) SetOptional(v *[]byte, err error) {
 	}
 }
 
+// Ptr returns a pointer to the ByteSliceResult
+func (r ByteSliceResult) Ptr() *ByteSliceResult { return &r }
+
 func (r ByteSliceResult) clear() {
 	r.value = nil
 	r.err = nil

@@ -145,6 +145,9 @@ func (r *TimeResult) SetOptional(v *time.Time, err error) {
 	}
 }
 
+// Ptr returns a pointer to the TimeResult
+func (r TimeResult) Ptr() *TimeResult { return &r }
+
 func (r TimeResult) clear() {
 	r.value = nil
 	r.err = nil

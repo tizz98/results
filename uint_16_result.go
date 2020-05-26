@@ -144,6 +144,9 @@ func (r *Uint16Result) SetOptional(v *uint16, err error) {
 	}
 }
 
+// Ptr returns a pointer to the Uint16Result
+func (r Uint16Result) Ptr() *Uint16Result { return &r }
+
 func (r Uint16Result) clear() {
 	r.value = nil
 	r.err = nil

@@ -141,6 +141,9 @@ func (r *{{.ResultName}}) SetOptional(v *{{.T}}, err error) {
 	}
 }
 
+// Ptr returns a pointer to the {{.ResultName}}
+func (r {{.ResultName}}) Ptr() *{{.ResultName}} { return &r }
+
 func (r {{.ResultName}}) clear() {
 	r.{{.FieldName}} = nil
 	r.err = nil

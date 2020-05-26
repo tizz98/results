@@ -144,6 +144,9 @@ func (r *BoolResult) SetOptional(v *bool, err error) {
 	}
 }
 
+// Ptr returns a pointer to the BoolResult
+func (r BoolResult) Ptr() *BoolResult { return &r }
+
 func (r BoolResult) clear() {
 	r.value = nil
 	r.err = nil
