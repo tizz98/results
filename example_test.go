@@ -68,3 +68,39 @@ func ExampleIntFromContext() {
 	fmt.Printf("%v: %d, %v: %d\n", result1.IsOk(), result1.Unwrap(), result2.IsOk(), result2.UnwrapOr(4567))
 	// Output: true: 4242, false: 4567
 }
+
+func newInt(v int) *int    { return &v }
+func newBool(b bool) *bool { return &b }
+
+func ExampleEmptyResult_UnwrapTo() {
+	var foo = func() (result EmptyResult) {
+		SetNewByteSliceResult([]byte(`123`), nil).
+			UnwrapTo(NewOptionalIntResultPtr(newInt(12), nil)).
+			UnwrapTo(NewOptionalIntResultPtr(newInt(100), nil)).
+			UnwrapTo(NewOptionalIntResultPtr(nil, fmt.Errorf("foo"))).
+			UnwrapTo(NewOptionalBoolResultPtr(newBool(false), nil)).
+			UnwrapTo(&result)
+
+		return
+	}
+
+	result := foo()
+	fmt.Printf("%v %s\n", result.IsOk(), result.GetErr())
+	// Output: false foo
+}
+
+func ExampleBoolResult_UnwrapTo() {
+	var foo = func() (result BoolResult) {
+		SetNewBoolResult(true, nil).
+			UnwrapTo(SetNewBoolResultPtr(false, nil)).
+			//UnwrapTo(NewOptionalBoolResultPtr(nil, fmt.Errorf("some failure"))).
+			UnwrapTo(SetNewBoolResultPtr(false, nil)).
+			UnwrapTo(&result)
+
+		return
+	}
+
+	result := foo()
+	fmt.Printf("%v %v\n", result.IsOk(), result.Unwrap()) // the unwrapped value is the initial "true"
+	// Output: true true
+}

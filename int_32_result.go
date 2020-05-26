@@ -17,6 +17,26 @@ func SetNewInt32Result(v int32, err error) (result Int32Result) {
 	return
 }
 
+// SetNewInt32ResultPtr is a shortcut to creating a new Int32Result and then calling .Set(v, err) on it.
+// This function differs from SetNewInt32Result by returning a pointer to Int32Result.
+func SetNewInt32ResultPtr(v int32, err error) *Int32Result {
+	result := SetNewInt32Result(v, err)
+	return &result
+}
+
+// NewOptionalInt32Result is a shortcut to creating a new Int32Result and then calling .SetOptional(v, err) on it.
+func NewOptionalInt32Result(v *int32, err error) (result Int32Result) {
+	result.SetOptional(v, err)
+	return
+}
+
+// NewOptionalInt32ResultPtr is a shortcut to creating a new Int32Result and then calling .SetOptional(v, err) on it.
+// This function differs from NewOptionalInt32Result by returning a pointer to Int32Result.
+func NewOptionalInt32ResultPtr(v *int32, err error) *Int32Result {
+	result := NewOptionalInt32Result(v, err)
+	return &result
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r Int32Result) IsOk() bool {
 	return r.err == nil
@@ -36,10 +56,15 @@ func (r Int32Result) Unwrap() int32 {
 }
 
 // UnwrapTo will call the .Err() method on the other Result if this Int32Result has an error.
-func (r Int32Result) UnwrapTo(other Result) {
+// If other is a pointer to a Int32Result, then .Ok() will be called if this Int32Result name does not have an error.
+func (r Int32Result) UnwrapTo(other Result) Result {
 	if r.IsErr() {
 		other.Err(r.GetErr())
+	} else if other, ok := other.(*Int32Result); ok {
+		other.Ok(r.Unwrap())
 	}
+
+	return other
 }
 
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
@@ -78,14 +103,14 @@ func (r Int32Result) UnwrapOrElse(fn func(err error) int32) int32 {
 // Ok sets the result to a successful result with the provided value.
 // This will panic if the result has already been set to successful or an error.
 func (r *Int32Result) Ok(v int32) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.value = &v
 }
 
 // Err sets the result to an error result with the provided error.
 // This will panic if the result has already been set to successful or an error.
 func (r *Int32Result) Err(err error) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.err = err
 }
 
@@ -104,20 +129,36 @@ func (r Int32Result) Tup() (int32, error) {
 func (r *Int32Result) Set(v int32, err error) {
 	if err != nil {
 		r.Err(err)
+	} else {
+		r.Ok(v)
+	}
+}
+
+// SetOptional is similar to Set but can be called with a nil value for int32.
+// The error will be checked first to see if it is not nil, then if v is not nil it will be set with .Ok(v).
+func (r *Int32Result) SetOptional(v *int32, err error) {
+	if err != nil {
+		r.Err(err)
+	} else if v != nil {
+		r.Ok(*v)
+	}
+}
+
+func (r Int32Result) clear() {
+	r.value = nil
+	r.err = nil
+}
+
+// ResultToInt32Result takes a Result interface and returns a Int32Result. If "r" contains a Int32Result,
+// it is returned, otherwise a new Int32Result is returned with an error set.
+func ResultToInt32Result(r Result) (result Int32Result) {
+	v, ok := r.(*Int32Result)
+	if !ok {
+		result.Err(fmt.Errorf("expected *Int32Result got %T", v))
 		return
 	}
 
-	r.Ok(v)
-}
-
-func (r Int32Result) checkAbilityToSet() {
-	if r.isSet() {
-		panic("Int32Result is already set, cannot set again")
-	}
-}
-
-func (r Int32Result) isSet() bool {
-	return r.value != nil || r.err != nil
+	return *v
 }
 
 // ContextWithInt32 embeds the given value of int32 into the context for later retrieval with Int32FromContext

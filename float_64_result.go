@@ -17,6 +17,26 @@ func SetNewFloat64Result(v float64, err error) (result Float64Result) {
 	return
 }
 
+// SetNewFloat64ResultPtr is a shortcut to creating a new Float64Result and then calling .Set(v, err) on it.
+// This function differs from SetNewFloat64Result by returning a pointer to Float64Result.
+func SetNewFloat64ResultPtr(v float64, err error) *Float64Result {
+	result := SetNewFloat64Result(v, err)
+	return &result
+}
+
+// NewOptionalFloat64Result is a shortcut to creating a new Float64Result and then calling .SetOptional(v, err) on it.
+func NewOptionalFloat64Result(v *float64, err error) (result Float64Result) {
+	result.SetOptional(v, err)
+	return
+}
+
+// NewOptionalFloat64ResultPtr is a shortcut to creating a new Float64Result and then calling .SetOptional(v, err) on it.
+// This function differs from NewOptionalFloat64Result by returning a pointer to Float64Result.
+func NewOptionalFloat64ResultPtr(v *float64, err error) *Float64Result {
+	result := NewOptionalFloat64Result(v, err)
+	return &result
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r Float64Result) IsOk() bool {
 	return r.err == nil
@@ -36,10 +56,15 @@ func (r Float64Result) Unwrap() float64 {
 }
 
 // UnwrapTo will call the .Err() method on the other Result if this Float64Result has an error.
-func (r Float64Result) UnwrapTo(other Result) {
+// If other is a pointer to a Float64Result, then .Ok() will be called if this Float64Result name does not have an error.
+func (r Float64Result) UnwrapTo(other Result) Result {
 	if r.IsErr() {
 		other.Err(r.GetErr())
+	} else if other, ok := other.(*Float64Result); ok {
+		other.Ok(r.Unwrap())
 	}
+
+	return other
 }
 
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
@@ -78,14 +103,14 @@ func (r Float64Result) UnwrapOrElse(fn func(err error) float64) float64 {
 // Ok sets the result to a successful result with the provided value.
 // This will panic if the result has already been set to successful or an error.
 func (r *Float64Result) Ok(v float64) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.value = &v
 }
 
 // Err sets the result to an error result with the provided error.
 // This will panic if the result has already been set to successful or an error.
 func (r *Float64Result) Err(err error) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.err = err
 }
 
@@ -104,20 +129,36 @@ func (r Float64Result) Tup() (float64, error) {
 func (r *Float64Result) Set(v float64, err error) {
 	if err != nil {
 		r.Err(err)
+	} else {
+		r.Ok(v)
+	}
+}
+
+// SetOptional is similar to Set but can be called with a nil value for float64.
+// The error will be checked first to see if it is not nil, then if v is not nil it will be set with .Ok(v).
+func (r *Float64Result) SetOptional(v *float64, err error) {
+	if err != nil {
+		r.Err(err)
+	} else if v != nil {
+		r.Ok(*v)
+	}
+}
+
+func (r Float64Result) clear() {
+	r.value = nil
+	r.err = nil
+}
+
+// ResultToFloat64Result takes a Result interface and returns a Float64Result. If "r" contains a Float64Result,
+// it is returned, otherwise a new Float64Result is returned with an error set.
+func ResultToFloat64Result(r Result) (result Float64Result) {
+	v, ok := r.(*Float64Result)
+	if !ok {
+		result.Err(fmt.Errorf("expected *Float64Result got %T", v))
 		return
 	}
 
-	r.Ok(v)
-}
-
-func (r Float64Result) checkAbilityToSet() {
-	if r.isSet() {
-		panic("Float64Result is already set, cannot set again")
-	}
-}
-
-func (r Float64Result) isSet() bool {
-	return r.value != nil || r.err != nil
+	return *v
 }
 
 // ContextWithFloat64 embeds the given value of float64 into the context for later retrieval with Float64FromContext

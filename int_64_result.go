@@ -17,6 +17,26 @@ func SetNewInt64Result(v int64, err error) (result Int64Result) {
 	return
 }
 
+// SetNewInt64ResultPtr is a shortcut to creating a new Int64Result and then calling .Set(v, err) on it.
+// This function differs from SetNewInt64Result by returning a pointer to Int64Result.
+func SetNewInt64ResultPtr(v int64, err error) *Int64Result {
+	result := SetNewInt64Result(v, err)
+	return &result
+}
+
+// NewOptionalInt64Result is a shortcut to creating a new Int64Result and then calling .SetOptional(v, err) on it.
+func NewOptionalInt64Result(v *int64, err error) (result Int64Result) {
+	result.SetOptional(v, err)
+	return
+}
+
+// NewOptionalInt64ResultPtr is a shortcut to creating a new Int64Result and then calling .SetOptional(v, err) on it.
+// This function differs from NewOptionalInt64Result by returning a pointer to Int64Result.
+func NewOptionalInt64ResultPtr(v *int64, err error) *Int64Result {
+	result := NewOptionalInt64Result(v, err)
+	return &result
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r Int64Result) IsOk() bool {
 	return r.err == nil
@@ -36,10 +56,15 @@ func (r Int64Result) Unwrap() int64 {
 }
 
 // UnwrapTo will call the .Err() method on the other Result if this Int64Result has an error.
-func (r Int64Result) UnwrapTo(other Result) {
+// If other is a pointer to a Int64Result, then .Ok() will be called if this Int64Result name does not have an error.
+func (r Int64Result) UnwrapTo(other Result) Result {
 	if r.IsErr() {
 		other.Err(r.GetErr())
+	} else if other, ok := other.(*Int64Result); ok {
+		other.Ok(r.Unwrap())
 	}
+
+	return other
 }
 
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
@@ -78,14 +103,14 @@ func (r Int64Result) UnwrapOrElse(fn func(err error) int64) int64 {
 // Ok sets the result to a successful result with the provided value.
 // This will panic if the result has already been set to successful or an error.
 func (r *Int64Result) Ok(v int64) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.value = &v
 }
 
 // Err sets the result to an error result with the provided error.
 // This will panic if the result has already been set to successful or an error.
 func (r *Int64Result) Err(err error) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.err = err
 }
 
@@ -104,20 +129,36 @@ func (r Int64Result) Tup() (int64, error) {
 func (r *Int64Result) Set(v int64, err error) {
 	if err != nil {
 		r.Err(err)
+	} else {
+		r.Ok(v)
+	}
+}
+
+// SetOptional is similar to Set but can be called with a nil value for int64.
+// The error will be checked first to see if it is not nil, then if v is not nil it will be set with .Ok(v).
+func (r *Int64Result) SetOptional(v *int64, err error) {
+	if err != nil {
+		r.Err(err)
+	} else if v != nil {
+		r.Ok(*v)
+	}
+}
+
+func (r Int64Result) clear() {
+	r.value = nil
+	r.err = nil
+}
+
+// ResultToInt64Result takes a Result interface and returns a Int64Result. If "r" contains a Int64Result,
+// it is returned, otherwise a new Int64Result is returned with an error set.
+func ResultToInt64Result(r Result) (result Int64Result) {
+	v, ok := r.(*Int64Result)
+	if !ok {
+		result.Err(fmt.Errorf("expected *Int64Result got %T", v))
 		return
 	}
 
-	r.Ok(v)
-}
-
-func (r Int64Result) checkAbilityToSet() {
-	if r.isSet() {
-		panic("Int64Result is already set, cannot set again")
-	}
-}
-
-func (r Int64Result) isSet() bool {
-	return r.value != nil || r.err != nil
+	return *v
 }
 
 // ContextWithInt64 embeds the given value of int64 into the context for later retrieval with Int64FromContext

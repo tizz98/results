@@ -17,6 +17,26 @@ func SetNewByteSliceResult(v []byte, err error) (result ByteSliceResult) {
 	return
 }
 
+// SetNewByteSliceResultPtr is a shortcut to creating a new ByteSliceResult and then calling .Set(v, err) on it.
+// This function differs from SetNewByteSliceResult by returning a pointer to ByteSliceResult.
+func SetNewByteSliceResultPtr(v []byte, err error) *ByteSliceResult {
+	result := SetNewByteSliceResult(v, err)
+	return &result
+}
+
+// NewOptionalByteSliceResult is a shortcut to creating a new ByteSliceResult and then calling .SetOptional(v, err) on it.
+func NewOptionalByteSliceResult(v *[]byte, err error) (result ByteSliceResult) {
+	result.SetOptional(v, err)
+	return
+}
+
+// NewOptionalByteSliceResultPtr is a shortcut to creating a new ByteSliceResult and then calling .SetOptional(v, err) on it.
+// This function differs from NewOptionalByteSliceResult by returning a pointer to ByteSliceResult.
+func NewOptionalByteSliceResultPtr(v *[]byte, err error) *ByteSliceResult {
+	result := NewOptionalByteSliceResult(v, err)
+	return &result
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r ByteSliceResult) IsOk() bool {
 	return r.err == nil
@@ -36,10 +56,15 @@ func (r ByteSliceResult) Unwrap() []byte {
 }
 
 // UnwrapTo will call the .Err() method on the other Result if this ByteSliceResult has an error.
-func (r ByteSliceResult) UnwrapTo(other Result) {
+// If other is a pointer to a ByteSliceResult, then .Ok() will be called if this ByteSliceResult name does not have an error.
+func (r ByteSliceResult) UnwrapTo(other Result) Result {
 	if r.IsErr() {
 		other.Err(r.GetErr())
+	} else if other, ok := other.(*ByteSliceResult); ok {
+		other.Ok(r.Unwrap())
 	}
+
+	return other
 }
 
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
@@ -78,14 +103,14 @@ func (r ByteSliceResult) UnwrapOrElse(fn func(err error) []byte) []byte {
 // Ok sets the result to a successful result with the provided value.
 // This will panic if the result has already been set to successful or an error.
 func (r *ByteSliceResult) Ok(v []byte) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.value = &v
 }
 
 // Err sets the result to an error result with the provided error.
 // This will panic if the result has already been set to successful or an error.
 func (r *ByteSliceResult) Err(err error) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.err = err
 }
 
@@ -104,20 +129,36 @@ func (r ByteSliceResult) Tup() ([]byte, error) {
 func (r *ByteSliceResult) Set(v []byte, err error) {
 	if err != nil {
 		r.Err(err)
+	} else {
+		r.Ok(v)
+	}
+}
+
+// SetOptional is similar to Set but can be called with a nil value for []byte.
+// The error will be checked first to see if it is not nil, then if v is not nil it will be set with .Ok(v).
+func (r *ByteSliceResult) SetOptional(v *[]byte, err error) {
+	if err != nil {
+		r.Err(err)
+	} else if v != nil {
+		r.Ok(*v)
+	}
+}
+
+func (r ByteSliceResult) clear() {
+	r.value = nil
+	r.err = nil
+}
+
+// ResultToByteSliceResult takes a Result interface and returns a ByteSliceResult. If "r" contains a ByteSliceResult,
+// it is returned, otherwise a new ByteSliceResult is returned with an error set.
+func ResultToByteSliceResult(r Result) (result ByteSliceResult) {
+	v, ok := r.(*ByteSliceResult)
+	if !ok {
+		result.Err(fmt.Errorf("expected *ByteSliceResult got %T", v))
 		return
 	}
 
-	r.Ok(v)
-}
-
-func (r ByteSliceResult) checkAbilityToSet() {
-	if r.isSet() {
-		panic("ByteSliceResult is already set, cannot set again")
-	}
-}
-
-func (r ByteSliceResult) isSet() bool {
-	return r.value != nil || r.err != nil
+	return *v
 }
 
 // ContextWithByteSlice embeds the given value of []byte into the context for later retrieval with ByteSliceFromContext

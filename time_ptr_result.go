@@ -18,6 +18,26 @@ func SetNewTimePtrResult(v *time.Time, err error) (result TimePtrResult) {
 	return
 }
 
+// SetNewTimePtrResultPtr is a shortcut to creating a new TimePtrResult and then calling .Set(v, err) on it.
+// This function differs from SetNewTimePtrResult by returning a pointer to TimePtrResult.
+func SetNewTimePtrResultPtr(v *time.Time, err error) *TimePtrResult {
+	result := SetNewTimePtrResult(v, err)
+	return &result
+}
+
+// NewOptionalTimePtrResult is a shortcut to creating a new TimePtrResult and then calling .SetOptional(v, err) on it.
+func NewOptionalTimePtrResult(v **time.Time, err error) (result TimePtrResult) {
+	result.SetOptional(v, err)
+	return
+}
+
+// NewOptionalTimePtrResultPtr is a shortcut to creating a new TimePtrResult and then calling .SetOptional(v, err) on it.
+// This function differs from NewOptionalTimePtrResult by returning a pointer to TimePtrResult.
+func NewOptionalTimePtrResultPtr(v **time.Time, err error) *TimePtrResult {
+	result := NewOptionalTimePtrResult(v, err)
+	return &result
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r TimePtrResult) IsOk() bool {
 	return r.err == nil
@@ -37,10 +57,15 @@ func (r TimePtrResult) Unwrap() *time.Time {
 }
 
 // UnwrapTo will call the .Err() method on the other Result if this TimePtrResult has an error.
-func (r TimePtrResult) UnwrapTo(other Result) {
+// If other is a pointer to a TimePtrResult, then .Ok() will be called if this TimePtrResult name does not have an error.
+func (r TimePtrResult) UnwrapTo(other Result) Result {
 	if r.IsErr() {
 		other.Err(r.GetErr())
+	} else if other, ok := other.(*TimePtrResult); ok {
+		other.Ok(r.Unwrap())
 	}
+
+	return other
 }
 
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
@@ -79,14 +104,14 @@ func (r TimePtrResult) UnwrapOrElse(fn func(err error) *time.Time) *time.Time {
 // Ok sets the result to a successful result with the provided value.
 // This will panic if the result has already been set to successful or an error.
 func (r *TimePtrResult) Ok(v *time.Time) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.value = &v
 }
 
 // Err sets the result to an error result with the provided error.
 // This will panic if the result has already been set to successful or an error.
 func (r *TimePtrResult) Err(err error) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.err = err
 }
 
@@ -105,20 +130,36 @@ func (r TimePtrResult) Tup() (*time.Time, error) {
 func (r *TimePtrResult) Set(v *time.Time, err error) {
 	if err != nil {
 		r.Err(err)
+	} else {
+		r.Ok(v)
+	}
+}
+
+// SetOptional is similar to Set but can be called with a nil value for *time.Time.
+// The error will be checked first to see if it is not nil, then if v is not nil it will be set with .Ok(v).
+func (r *TimePtrResult) SetOptional(v **time.Time, err error) {
+	if err != nil {
+		r.Err(err)
+	} else if v != nil {
+		r.Ok(*v)
+	}
+}
+
+func (r TimePtrResult) clear() {
+	r.value = nil
+	r.err = nil
+}
+
+// ResultToTimePtrResult takes a Result interface and returns a TimePtrResult. If "r" contains a TimePtrResult,
+// it is returned, otherwise a new TimePtrResult is returned with an error set.
+func ResultToTimePtrResult(r Result) (result TimePtrResult) {
+	v, ok := r.(*TimePtrResult)
+	if !ok {
+		result.Err(fmt.Errorf("expected *TimePtrResult got %T", v))
 		return
 	}
 
-	r.Ok(v)
-}
-
-func (r TimePtrResult) checkAbilityToSet() {
-	if r.isSet() {
-		panic("TimePtrResult is already set, cannot set again")
-	}
-}
-
-func (r TimePtrResult) isSet() bool {
-	return r.value != nil || r.err != nil
+	return *v
 }
 
 // ContextWithTimePtr embeds the given value of *time.Time into the context for later retrieval with TimePtrFromContext

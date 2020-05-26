@@ -24,4 +24,5 @@ type Result interface {
 	IsErr() bool
 	GetErr() error
 	Err(err error)
+	UnwrapTo(other Result) Result
 }

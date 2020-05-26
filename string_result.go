@@ -17,6 +17,26 @@ func SetNewStringResult(v string, err error) (result StringResult) {
 	return
 }
 
+// SetNewStringResultPtr is a shortcut to creating a new StringResult and then calling .Set(v, err) on it.
+// This function differs from SetNewStringResult by returning a pointer to StringResult.
+func SetNewStringResultPtr(v string, err error) *StringResult {
+	result := SetNewStringResult(v, err)
+	return &result
+}
+
+// NewOptionalStringResult is a shortcut to creating a new StringResult and then calling .SetOptional(v, err) on it.
+func NewOptionalStringResult(v *string, err error) (result StringResult) {
+	result.SetOptional(v, err)
+	return
+}
+
+// NewOptionalStringResultPtr is a shortcut to creating a new StringResult and then calling .SetOptional(v, err) on it.
+// This function differs from NewOptionalStringResult by returning a pointer to StringResult.
+func NewOptionalStringResultPtr(v *string, err error) *StringResult {
+	result := NewOptionalStringResult(v, err)
+	return &result
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r StringResult) IsOk() bool {
 	return r.err == nil
@@ -36,10 +56,15 @@ func (r StringResult) Unwrap() string {
 }
 
 // UnwrapTo will call the .Err() method on the other Result if this StringResult has an error.
-func (r StringResult) UnwrapTo(other Result) {
+// If other is a pointer to a StringResult, then .Ok() will be called if this StringResult name does not have an error.
+func (r StringResult) UnwrapTo(other Result) Result {
 	if r.IsErr() {
 		other.Err(r.GetErr())
+	} else if other, ok := other.(*StringResult); ok {
+		other.Ok(r.Unwrap())
 	}
+
+	return other
 }
 
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
@@ -78,14 +103,14 @@ func (r StringResult) UnwrapOrElse(fn func(err error) string) string {
 // Ok sets the result to a successful result with the provided value.
 // This will panic if the result has already been set to successful or an error.
 func (r *StringResult) Ok(v string) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.value = &v
 }
 
 // Err sets the result to an error result with the provided error.
 // This will panic if the result has already been set to successful or an error.
 func (r *StringResult) Err(err error) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.err = err
 }
 
@@ -104,20 +129,36 @@ func (r StringResult) Tup() (string, error) {
 func (r *StringResult) Set(v string, err error) {
 	if err != nil {
 		r.Err(err)
+	} else {
+		r.Ok(v)
+	}
+}
+
+// SetOptional is similar to Set but can be called with a nil value for string.
+// The error will be checked first to see if it is not nil, then if v is not nil it will be set with .Ok(v).
+func (r *StringResult) SetOptional(v *string, err error) {
+	if err != nil {
+		r.Err(err)
+	} else if v != nil {
+		r.Ok(*v)
+	}
+}
+
+func (r StringResult) clear() {
+	r.value = nil
+	r.err = nil
+}
+
+// ResultToStringResult takes a Result interface and returns a StringResult. If "r" contains a StringResult,
+// it is returned, otherwise a new StringResult is returned with an error set.
+func ResultToStringResult(r Result) (result StringResult) {
+	v, ok := r.(*StringResult)
+	if !ok {
+		result.Err(fmt.Errorf("expected *StringResult got %T", v))
 		return
 	}
 
-	r.Ok(v)
-}
-
-func (r StringResult) checkAbilityToSet() {
-	if r.isSet() {
-		panic("StringResult is already set, cannot set again")
-	}
-}
-
-func (r StringResult) isSet() bool {
-	return r.value != nil || r.err != nil
+	return *v
 }
 
 // ContextWithString embeds the given value of string into the context for later retrieval with StringFromContext

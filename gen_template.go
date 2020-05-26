@@ -14,6 +14,26 @@ func SetNew{{.ResultName}}(v {{.T}}, err error) (result {{.ResultName}}) {
 	return
 }
 
+// SetNew{{.ResultName}}Ptr is a shortcut to creating a new {{.ResultName}} and then calling .Set(v, err) on it.
+// This function differs from SetNew{{.ResultName}} by returning a pointer to {{.ResultName}}.
+func SetNew{{.ResultName}}Ptr(v {{.T}}, err error) *{{.ResultName}} {
+	result := SetNew{{.ResultName}}(v, err)
+	return &result
+}
+
+// NewOptional{{.ResultName}} is a shortcut to creating a new {{.ResultName}} and then calling .SetOptional(v, err) on it.
+func NewOptional{{.ResultName}}(v *{{.T}}, err error) (result {{.ResultName}}) {
+	result.SetOptional(v, err)
+	return
+}
+
+// NewOptional{{.ResultName}}Ptr is a shortcut to creating a new {{.ResultName}} and then calling .SetOptional(v, err) on it.
+// This function differs from NewOptional{{.ResultName}} by returning a pointer to {{.ResultName}}.
+func NewOptional{{.ResultName}}Ptr(v *{{.T}}, err error) *{{.ResultName}} {
+	result := NewOptional{{.ResultName}}(v, err)
+	return &result
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r {{.ResultName}}) IsOk() bool {
     return r.err == nil
@@ -33,10 +53,15 @@ func (r {{.ResultName}}) Unwrap() {{.T}} {
 }
 
 // UnwrapTo will call the .Err() method on the other Result if this {{.ResultName}} has an error.
-func (r {{.ResultName}}) UnwrapTo(other Result) {
+// If other is a pointer to a {{.ResultName}}, then .Ok() will be called if this {{.ResultName}} name does not have an error.
+func (r {{.ResultName}}) UnwrapTo(other Result) Result {
 	if r.IsErr() {
 		other.Err(r.GetErr())
+	} else if other, ok := other.(*{{.ResultName}}); ok {
+		other.Ok(r.Unwrap())
 	}
+
+	return other
 }
 
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
@@ -75,14 +100,14 @@ func (r {{.ResultName}}) UnwrapOrElse(fn func(err error) {{.T}}) {{.T}} {
 // Ok sets the result to a successful result with the provided value.
 // This will panic if the result has already been set to successful or an error.
 func (r *{{.ResultName}}) Ok(v {{.T}}) {
-    r.checkAbilityToSet()
+    r.clear()
     r.{{.FieldName}} = &v
 }
 
 // Err sets the result to an error result with the provided error.
 // This will panic if the result has already been set to successful or an error.
 func (r *{{.ResultName}}) Err(err error) {
-    r.checkAbilityToSet()
+    r.clear()
     r.err = err
 }
 
@@ -101,20 +126,36 @@ func (r {{.ResultName}}) Tup() ({{.T}}, error) {
 func (r *{{.ResultName}}) Set(v {{.T}}, err error) {
 	if err != nil {
 		r.Err(err)
+	} else {
+		r.Ok(v)
+	}
+}
+
+// SetOptional is similar to Set but can be called with a nil value for {{.T}}.
+// The error will be checked first to see if it is not nil, then if v is not nil it will be set with .Ok(v).
+func (r *{{.ResultName}}) SetOptional(v *{{.T}}, err error) {
+	if err != nil {
+		r.Err(err)
+	} else if v != nil {
+		r.Ok(*v)
+	}
+}
+
+func (r {{.ResultName}}) clear() {
+	r.{{.FieldName}} = nil
+	r.err = nil
+}
+
+// ResultTo{{.ResultName}} takes a Result interface and returns a {{.ResultName}}. If "r" contains a {{.ResultName}},
+// it is returned, otherwise a new {{.ResultName}} is returned with an error set.
+func ResultTo{{.ResultName}}(r Result) (result {{.ResultName}}) {
+	v, ok := r.(*{{.ResultName}})
+	if !ok {
+		result.Err(fmt.Errorf("expected *{{.ResultName}} got %T", v))
 		return
 	}
 
-	r.Ok(v)
-}
-
-func (r {{.ResultName}}) checkAbilityToSet() {
-    if r.isSet() {
-        panic("{{.ResultName}} is already set, cannot set again")
-    }
-}
-
-func (r {{.ResultName}}) isSet() bool {
-    return r.{{.FieldName}} != nil || r.err != nil
+	return *v
 }
 
 {{if .GenContext}}

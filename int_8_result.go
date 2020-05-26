@@ -17,6 +17,26 @@ func SetNewInt8Result(v int8, err error) (result Int8Result) {
 	return
 }
 
+// SetNewInt8ResultPtr is a shortcut to creating a new Int8Result and then calling .Set(v, err) on it.
+// This function differs from SetNewInt8Result by returning a pointer to Int8Result.
+func SetNewInt8ResultPtr(v int8, err error) *Int8Result {
+	result := SetNewInt8Result(v, err)
+	return &result
+}
+
+// NewOptionalInt8Result is a shortcut to creating a new Int8Result and then calling .SetOptional(v, err) on it.
+func NewOptionalInt8Result(v *int8, err error) (result Int8Result) {
+	result.SetOptional(v, err)
+	return
+}
+
+// NewOptionalInt8ResultPtr is a shortcut to creating a new Int8Result and then calling .SetOptional(v, err) on it.
+// This function differs from NewOptionalInt8Result by returning a pointer to Int8Result.
+func NewOptionalInt8ResultPtr(v *int8, err error) *Int8Result {
+	result := NewOptionalInt8Result(v, err)
+	return &result
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r Int8Result) IsOk() bool {
 	return r.err == nil
@@ -36,10 +56,15 @@ func (r Int8Result) Unwrap() int8 {
 }
 
 // UnwrapTo will call the .Err() method on the other Result if this Int8Result has an error.
-func (r Int8Result) UnwrapTo(other Result) {
+// If other is a pointer to a Int8Result, then .Ok() will be called if this Int8Result name does not have an error.
+func (r Int8Result) UnwrapTo(other Result) Result {
 	if r.IsErr() {
 		other.Err(r.GetErr())
+	} else if other, ok := other.(*Int8Result); ok {
+		other.Ok(r.Unwrap())
 	}
+
+	return other
 }
 
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
@@ -78,14 +103,14 @@ func (r Int8Result) UnwrapOrElse(fn func(err error) int8) int8 {
 // Ok sets the result to a successful result with the provided value.
 // This will panic if the result has already been set to successful or an error.
 func (r *Int8Result) Ok(v int8) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.value = &v
 }
 
 // Err sets the result to an error result with the provided error.
 // This will panic if the result has already been set to successful or an error.
 func (r *Int8Result) Err(err error) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.err = err
 }
 
@@ -104,20 +129,36 @@ func (r Int8Result) Tup() (int8, error) {
 func (r *Int8Result) Set(v int8, err error) {
 	if err != nil {
 		r.Err(err)
+	} else {
+		r.Ok(v)
+	}
+}
+
+// SetOptional is similar to Set but can be called with a nil value for int8.
+// The error will be checked first to see if it is not nil, then if v is not nil it will be set with .Ok(v).
+func (r *Int8Result) SetOptional(v *int8, err error) {
+	if err != nil {
+		r.Err(err)
+	} else if v != nil {
+		r.Ok(*v)
+	}
+}
+
+func (r Int8Result) clear() {
+	r.value = nil
+	r.err = nil
+}
+
+// ResultToInt8Result takes a Result interface and returns a Int8Result. If "r" contains a Int8Result,
+// it is returned, otherwise a new Int8Result is returned with an error set.
+func ResultToInt8Result(r Result) (result Int8Result) {
+	v, ok := r.(*Int8Result)
+	if !ok {
+		result.Err(fmt.Errorf("expected *Int8Result got %T", v))
 		return
 	}
 
-	r.Ok(v)
-}
-
-func (r Int8Result) checkAbilityToSet() {
-	if r.isSet() {
-		panic("Int8Result is already set, cannot set again")
-	}
-}
-
-func (r Int8Result) isSet() bool {
-	return r.value != nil || r.err != nil
+	return *v
 }
 
 // ContextWithInt8 embeds the given value of int8 into the context for later retrieval with Int8FromContext

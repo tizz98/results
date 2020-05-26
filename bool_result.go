@@ -17,6 +17,26 @@ func SetNewBoolResult(v bool, err error) (result BoolResult) {
 	return
 }
 
+// SetNewBoolResultPtr is a shortcut to creating a new BoolResult and then calling .Set(v, err) on it.
+// This function differs from SetNewBoolResult by returning a pointer to BoolResult.
+func SetNewBoolResultPtr(v bool, err error) *BoolResult {
+	result := SetNewBoolResult(v, err)
+	return &result
+}
+
+// NewOptionalBoolResult is a shortcut to creating a new BoolResult and then calling .SetOptional(v, err) on it.
+func NewOptionalBoolResult(v *bool, err error) (result BoolResult) {
+	result.SetOptional(v, err)
+	return
+}
+
+// NewOptionalBoolResultPtr is a shortcut to creating a new BoolResult and then calling .SetOptional(v, err) on it.
+// This function differs from NewOptionalBoolResult by returning a pointer to BoolResult.
+func NewOptionalBoolResultPtr(v *bool, err error) *BoolResult {
+	result := NewOptionalBoolResult(v, err)
+	return &result
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r BoolResult) IsOk() bool {
 	return r.err == nil
@@ -36,10 +56,15 @@ func (r BoolResult) Unwrap() bool {
 }
 
 // UnwrapTo will call the .Err() method on the other Result if this BoolResult has an error.
-func (r BoolResult) UnwrapTo(other Result) {
+// If other is a pointer to a BoolResult, then .Ok() will be called if this BoolResult name does not have an error.
+func (r BoolResult) UnwrapTo(other Result) Result {
 	if r.IsErr() {
 		other.Err(r.GetErr())
+	} else if other, ok := other.(*BoolResult); ok {
+		other.Ok(r.Unwrap())
 	}
+
+	return other
 }
 
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
@@ -78,14 +103,14 @@ func (r BoolResult) UnwrapOrElse(fn func(err error) bool) bool {
 // Ok sets the result to a successful result with the provided value.
 // This will panic if the result has already been set to successful or an error.
 func (r *BoolResult) Ok(v bool) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.value = &v
 }
 
 // Err sets the result to an error result with the provided error.
 // This will panic if the result has already been set to successful or an error.
 func (r *BoolResult) Err(err error) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.err = err
 }
 
@@ -104,20 +129,36 @@ func (r BoolResult) Tup() (bool, error) {
 func (r *BoolResult) Set(v bool, err error) {
 	if err != nil {
 		r.Err(err)
+	} else {
+		r.Ok(v)
+	}
+}
+
+// SetOptional is similar to Set but can be called with a nil value for bool.
+// The error will be checked first to see if it is not nil, then if v is not nil it will be set with .Ok(v).
+func (r *BoolResult) SetOptional(v *bool, err error) {
+	if err != nil {
+		r.Err(err)
+	} else if v != nil {
+		r.Ok(*v)
+	}
+}
+
+func (r BoolResult) clear() {
+	r.value = nil
+	r.err = nil
+}
+
+// ResultToBoolResult takes a Result interface and returns a BoolResult. If "r" contains a BoolResult,
+// it is returned, otherwise a new BoolResult is returned with an error set.
+func ResultToBoolResult(r Result) (result BoolResult) {
+	v, ok := r.(*BoolResult)
+	if !ok {
+		result.Err(fmt.Errorf("expected *BoolResult got %T", v))
 		return
 	}
 
-	r.Ok(v)
-}
-
-func (r BoolResult) checkAbilityToSet() {
-	if r.isSet() {
-		panic("BoolResult is already set, cannot set again")
-	}
-}
-
-func (r BoolResult) isSet() bool {
-	return r.value != nil || r.err != nil
+	return *v
 }
 
 // ContextWithBool embeds the given value of bool into the context for later retrieval with BoolFromContext

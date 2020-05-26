@@ -17,6 +17,26 @@ func SetNewUint16Result(v uint16, err error) (result Uint16Result) {
 	return
 }
 
+// SetNewUint16ResultPtr is a shortcut to creating a new Uint16Result and then calling .Set(v, err) on it.
+// This function differs from SetNewUint16Result by returning a pointer to Uint16Result.
+func SetNewUint16ResultPtr(v uint16, err error) *Uint16Result {
+	result := SetNewUint16Result(v, err)
+	return &result
+}
+
+// NewOptionalUint16Result is a shortcut to creating a new Uint16Result and then calling .SetOptional(v, err) on it.
+func NewOptionalUint16Result(v *uint16, err error) (result Uint16Result) {
+	result.SetOptional(v, err)
+	return
+}
+
+// NewOptionalUint16ResultPtr is a shortcut to creating a new Uint16Result and then calling .SetOptional(v, err) on it.
+// This function differs from NewOptionalUint16Result by returning a pointer to Uint16Result.
+func NewOptionalUint16ResultPtr(v *uint16, err error) *Uint16Result {
+	result := NewOptionalUint16Result(v, err)
+	return &result
+}
+
 // IsOk returns true when the result contains a non-nil result with no error
 func (r Uint16Result) IsOk() bool {
 	return r.err == nil
@@ -36,10 +56,15 @@ func (r Uint16Result) Unwrap() uint16 {
 }
 
 // UnwrapTo will call the .Err() method on the other Result if this Uint16Result has an error.
-func (r Uint16Result) UnwrapTo(other Result) {
+// If other is a pointer to a Uint16Result, then .Ok() will be called if this Uint16Result name does not have an error.
+func (r Uint16Result) UnwrapTo(other Result) Result {
 	if r.IsErr() {
 		other.Err(r.GetErr())
+	} else if other, ok := other.(*Uint16Result); ok {
+		other.Ok(r.Unwrap())
 	}
+
+	return other
 }
 
 // Expect panics with the specified message if the result contains an error, otherwise it returns the value
@@ -78,14 +103,14 @@ func (r Uint16Result) UnwrapOrElse(fn func(err error) uint16) uint16 {
 // Ok sets the result to a successful result with the provided value.
 // This will panic if the result has already been set to successful or an error.
 func (r *Uint16Result) Ok(v uint16) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.value = &v
 }
 
 // Err sets the result to an error result with the provided error.
 // This will panic if the result has already been set to successful or an error.
 func (r *Uint16Result) Err(err error) {
-	r.checkAbilityToSet()
+	r.clear()
 	r.err = err
 }
 
@@ -104,20 +129,36 @@ func (r Uint16Result) Tup() (uint16, error) {
 func (r *Uint16Result) Set(v uint16, err error) {
 	if err != nil {
 		r.Err(err)
+	} else {
+		r.Ok(v)
+	}
+}
+
+// SetOptional is similar to Set but can be called with a nil value for uint16.
+// The error will be checked first to see if it is not nil, then if v is not nil it will be set with .Ok(v).
+func (r *Uint16Result) SetOptional(v *uint16, err error) {
+	if err != nil {
+		r.Err(err)
+	} else if v != nil {
+		r.Ok(*v)
+	}
+}
+
+func (r Uint16Result) clear() {
+	r.value = nil
+	r.err = nil
+}
+
+// ResultToUint16Result takes a Result interface and returns a Uint16Result. If "r" contains a Uint16Result,
+// it is returned, otherwise a new Uint16Result is returned with an error set.
+func ResultToUint16Result(r Result) (result Uint16Result) {
+	v, ok := r.(*Uint16Result)
+	if !ok {
+		result.Err(fmt.Errorf("expected *Uint16Result got %T", v))
 		return
 	}
 
-	r.Ok(v)
-}
-
-func (r Uint16Result) checkAbilityToSet() {
-	if r.isSet() {
-		panic("Uint16Result is already set, cannot set again")
-	}
-}
-
-func (r Uint16Result) isSet() bool {
-	return r.value != nil || r.err != nil
+	return *v
 }
 
 // ContextWithUint16 embeds the given value of uint16 into the context for later retrieval with Uint16FromContext
